@@ -8,6 +8,7 @@ import {
 } from '@tanstack/react-router';
 import {
     AppShell,
+    Box,
     useAppShellResize,
     ColorSchemeScript,
     mantineHtmlProps,
@@ -18,6 +19,7 @@ import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools';
 import { TanStackDevtools } from '@tanstack/react-devtools';
 import Footer from '../components/Footer/Footer';
 import Header from '../components/Header/Header';
+import ColorSchemeToggle from '../components/Header/ColorSchemeToggle';
 
 import TanStackQueryDevtools from '../integrations/tanstack-query/devtools';
 
@@ -93,7 +95,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
                 <HeadContent />
             </head>
             <body>
-                <MantineProvider>
+                <MantineProvider defaultColorScheme="auto">
                     {session?.user ? (
                         <AppShell
                             header={{ height: 60 }}
@@ -124,7 +126,20 @@ function RootDocument({ children }: { children: React.ReactNode }) {
                             </AppShell.Footer>
                         </AppShell>
                     ) : (
-                        children
+                        <>
+                            {/* The auth pages render outside the AppShell, so
+                                they get their own floating toggle. */}
+                            <Box
+                                pos="fixed"
+                                top={0}
+                                right={0}
+                                p="sm"
+                                style={{ zIndex: 100 }}
+                            >
+                                <ColorSchemeToggle />
+                            </Box>
+                            {children}
+                        </>
                     )}
                     {import.meta.env.DEV && (
                         <TanStackDevtools
