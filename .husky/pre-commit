@@ -1,0 +1,9 @@
+# Blocks a commit whose staged files fail ESLint or Prettier.
+#
+# The commands and file globs live under "lint-staged" in package.json. Both
+# only check — they never rewrite what you are committing. Run `pnpm format`
+# to fix what they report.
+#
+# To bypass in an emergency: git commit --no-verify
+
+pnpm exec lint-staged

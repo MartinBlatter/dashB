@@ -1,0 +1,16 @@
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+
+# Build output and generated sources.
+.output
+.tanstack
+dist
+src/generated
+src/paraglide
+src/routeTree.gen.ts
+
+# inlang-managed (gitignored by project.inlang/.gitignore).
+project.inlang/cache
+project.inlang/.lix
+project.inlang/.meta.json

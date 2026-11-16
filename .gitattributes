@@ -1,0 +1,7 @@
+# Normalize line endings: LF in the repository and in the working tree, on
+# every platform. Without this, a Windows checkout with core.autocrlf=true
+# writes CRLF files that Prettier then rejects (its endOfLine default is "lf"),
+# and lint-staged's stash/restore cycle silently reconverts the whole tree.
+#
+# `text=auto` still lets git detect binary files and leave them alone.
+* text=auto eol=lf

@@ -1,0 +1,35 @@
+{
+    "$schema": "https://inlang.com/schema/inlang-message-format",
+    "header": {
+        "language_label": "Sprache",
+        "add_widget": "Widget hinzufügen"
+    },
+    "navbar": {
+        "home": "Startseite"
+    },
+    "auth": {
+        "signInTitle": "Anmelden",
+        "signInSubtitle": "Melde dich an, um dein Dashboard zu öffnen.",
+        "signUpTitle": "Konto erstellen",
+        "signUpSubtitle": "Registriere dich, um Zugriff auf dein Dashboard zu erhalten.",
+        "name": "Name",
+        "email": "E-Mail",
+        "password": "Passwort",
+        "confirmPassword": "Passwort bestätigen",
+        "signIn": "Anmelden",
+        "signUp": "Konto erstellen",
+        "signOut": "Abmelden",
+        "account": "Konto",
+        "noAccount": "Noch kein Konto?",
+        "createAccount": "Jetzt erstellen",
+        "haveAccount": "Du hast schon ein Konto?",
+        "nameRequired": "Bitte gib deinen Namen ein.",
+        "invalidEmail": "Bitte gib eine gültige E-Mail-Adresse ein.",
+        "passwordRequired": "Bitte gib dein Passwort ein.",
+        "passwordTooShort": "Verwende mindestens {count} Zeichen.",
+        "passwordMismatch": "Die Passwörter stimmen nicht überein.",
+        "signInFailed": "Anmeldung fehlgeschlagen. Bitte prüfe deine Zugangsdaten.",
+        "signUpFailed": "Konto konnte nicht erstellt werden. Bitte versuche es erneut.",
+        "signOutFailed": "Abmeldung fehlgeschlagen. Bitte versuche es erneut."
+    }
+}
