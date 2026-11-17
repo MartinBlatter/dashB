@@ -22,6 +22,7 @@ model User {
   updatedAt     DateTime
   sessions      Session[]
   accounts      Account[]
+  headerWidgets HeaderWidget[]
 
   @@unique([email])
   @@map("user")
@@ -70,4 +71,22 @@ model Verification {
   updatedAt  DateTime
 
   @@map("verification")
+}
+
+
+// --- Header Widgets ---------------------------------------------------------------
+
+model HeaderWidget {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String
+  label     String
+  position  Int      @default(0)
+  config    Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, position])
+  @@map("header_widget")
 }

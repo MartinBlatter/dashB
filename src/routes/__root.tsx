@@ -1,4 +1,5 @@
 import mantineCoreStyles from '@mantine/core/styles.css?url';
+import mantineDatesStyles from '@mantine/dates/styles.css?url';
 
 import {
     HeadContent,
@@ -70,7 +71,10 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
                 title: 'DashB',
             },
         ],
-        links: [{ rel: 'stylesheet', href: mantineCoreStyles }],
+        links: [
+            { rel: 'stylesheet', href: mantineCoreStyles },
+            { rel: 'stylesheet', href: mantineDatesStyles },
+        ],
     }),
     shellComponent: RootDocument,
 });

@@ -1,9 +1,10 @@
-import { ActionIcon, Group, Button } from '@mantine/core';
-import { ListIcon, PlusIcon } from '@phosphor-icons/react';
-import { m } from '#/paraglide/messages';
+import { ActionIcon, Box, Group } from '@mantine/core';
+import { ListIcon } from '@phosphor-icons/react';
 import ParaglideLocaleSwitcher from './LocaleSwitcher';
 import ColorSchemeToggle from './ColorSchemeToggle';
-import UserMenu from './USerMenu';
+import UserMenu from './UserMenu';
+import AddHeaderWidgetModal from './AddHeaderWidgetModal';
+import HeaderWidgetBar from './HeaderWidgets/HeaderWidgetBar';
 
 export default function Header({
     toggleMobileNav,
@@ -13,8 +14,17 @@ export default function Header({
     toggleDesktopNav: () => void;
 }) {
     return (
-        <Group h="100%" px="sm" gap="xs" justify="space-between" wrap="nowrap">
-            <Group gap="xs" wrap="nowrap">
+        <Box
+            h="100%"
+            px="sm"
+            style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr auto 1fr',
+                alignItems: 'center',
+                gap: 'var(--mantine-spacing-xs)',
+            }}
+        >
+            <Group gap="xs" wrap="nowrap" justify="flex-start">
                 <ActionIcon
                     autoContrast
                     aria-label="Toggle navigation"
@@ -34,14 +44,15 @@ export default function Header({
                     <ListIcon size={20} />
                 </ActionIcon>
             </Group>
-            <Group gap="xs" wrap="nowrap">
-                <Button leftSection={<PlusIcon size={14} />}>
-                    {m['header.add_widget']()}
-                </Button>
+
+            <HeaderWidgetBar />
+
+            <Group gap="xs" wrap="nowrap" justify="flex-end">
+                <AddHeaderWidgetModal />
                 <ParaglideLocaleSwitcher />
                 <ColorSchemeToggle />
                 <UserMenu />
             </Group>
-        </Group>
+        </Box>
     );
 }

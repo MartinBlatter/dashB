@@ -2,7 +2,30 @@
     "$schema": "https://inlang.com/schema/inlang-message-format",
     "header": {
         "language_label": "Language",
-        "add_widget": "Add widget"
+        "add_widget": "Add widget",
+        "widget_type": "Widget type",
+        "widget_type_placeholder": "Pick a widget",
+        "widget_type_empty": "No matching widget",
+        "widget_label": "Name",
+        "widget_label_placeholder": "How this widget is labelled",
+        "edit_widget": "Edit widget",
+        "save_widget": "Save changes",
+        "cancel": "Cancel",
+        "delete_widget": "Delete widget",
+        "delete_widget_submit": "Delete",
+        "delete_widget_prompt": "Delete \"{label}\"? This cannot be undone.",
+        "widget_reorder": "Drag to reorder {label}",
+        "widget_edit": "Edit {label}",
+        "widget_form": {
+            "required": "This field is required.",
+            "save_failed": "Could not save the widget. Please try again.",
+            "delete_failed": "Could not delete the widget. Please try again.",
+            "invalid_number": "Please enter a number.",
+            "invalid_date": "Please enter a valid date and time.",
+            "too_long": "Use at most {count} characters.",
+            "too_small": "Use {min} or more.",
+            "too_large": "Use {max} or less."
+        }
     },
     "navbar": {
         "home": "Home"

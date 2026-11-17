@@ -2,7 +2,30 @@
     "$schema": "https://inlang.com/schema/inlang-message-format",
     "header": {
         "language_label": "Sprache",
-        "add_widget": "Widget hinzufügen"
+        "add_widget": "Widget hinzufügen",
+        "widget_type": "Widget-Typ",
+        "widget_type_placeholder": "Widget auswählen",
+        "widget_type_empty": "Kein passendes Widget",
+        "widget_label": "Name",
+        "widget_label_placeholder": "Wie dieses Widget benannt wird",
+        "edit_widget": "Widget bearbeiten",
+        "save_widget": "Änderungen speichern",
+        "cancel": "Abbrechen",
+        "delete_widget": "Widget löschen",
+        "delete_widget_submit": "Löschen",
+        "delete_widget_prompt": "„{label}“ wirklich löschen? Das kann nicht rückgängig gemacht werden.",
+        "widget_reorder": "{label} zum Umsortieren ziehen",
+        "widget_edit": "{label} bearbeiten",
+        "widget_form": {
+            "required": "Dieses Feld ist erforderlich.",
+            "save_failed": "Widget konnte nicht gespeichert werden. Bitte versuche es erneut.",
+            "delete_failed": "Widget konnte nicht gelöscht werden. Bitte versuche es erneut.",
+            "invalid_number": "Bitte gib eine Zahl ein.",
+            "invalid_date": "Bitte gib ein gültiges Datum mit Uhrzeit ein.",
+            "too_long": "Verwende maximal {count} Zeichen.",
+            "too_small": "Verwende {min} oder mehr.",
+            "too_large": "Verwende {max} oder weniger."
+        }
     },
     "navbar": {
         "home": "Startseite"
