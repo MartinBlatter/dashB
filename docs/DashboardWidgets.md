@@ -84,7 +84,7 @@ Grid units, not pixels: 12 columns across, each row 60px with a 12px gutter.
 | ------ | ----------------------------------- | ------- |
 | `w`    | Width in columns (1–12)             | `4`     |
 | `h`    | Height in rows                      | `4`     |
-| `minW` | Smallest width the user may drag to | `2`     |
+| `minW` | Smallest width the user may drag to | `1`     |
 | `minH` | Smallest height                     | `2`     |
 
 `w`/`h` apply only when the widget is created; after that the user's own size is

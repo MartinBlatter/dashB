@@ -60,7 +60,7 @@ export const widgetMeta = {
     type: 'schedule',
     label: () => t('label'),
     description: () => t('description'),
-    defaultSize: { w: 6, h: 9, minW: 4, minH: 6 },
+    defaultSize: { w: 6, h: 9, minW: 1, minH: 6 },
     fields: [
         {
             kind: 'select',

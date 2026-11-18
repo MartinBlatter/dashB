@@ -28,7 +28,7 @@ export const widgetMeta = {
     type: 'todo',
     label: () => t('label'),
     description: () => t('description'),
-    defaultSize: { w: 4, h: 7, minW: 3, minH: 4 },
+    defaultSize: { w: 4, h: 7, minW: 1, minH: 4 },
     fields: [
         {
             kind: 'switch',
