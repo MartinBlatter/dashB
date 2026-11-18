@@ -27,6 +27,18 @@ export const FieldInputs = withForm({
                                     />
                                 );
 
+                            case 'textarea':
+                                return (
+                                    <bound.TextareaField
+                                        label={label}
+                                        description={description}
+                                        placeholder={field.placeholder?.()}
+                                        maxLength={field.maxLength}
+                                        rows={field.rows}
+                                        withAsterisk={field.required}
+                                    />
+                                );
+
                             case 'number':
                                 return (
                                     <bound.NumberField

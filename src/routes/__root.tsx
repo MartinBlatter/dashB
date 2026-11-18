@@ -1,5 +1,6 @@
 import mantineCoreStyles from '@mantine/core/styles.css?url';
 import mantineDatesStyles from '@mantine/dates/styles.css?url';
+import mantineScheduleStyles from '@mantine/schedule/styles.css?url';
 
 import {
     HeadContent,
@@ -75,6 +76,7 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
         links: [
             { rel: 'stylesheet', href: mantineCoreStyles },
             { rel: 'stylesheet', href: mantineDatesStyles },
+            { rel: 'stylesheet', href: mantineScheduleStyles },
         ],
     }),
     shellComponent: RootDocument,

@@ -15,6 +15,7 @@ export const PICKER_DATE_FORMAT = 'YYYY-MM-DD';
 export function widgetFieldDefault(field: WidgetField): WidgetFieldValue {
     switch (field.kind) {
         case 'text':
+        case 'textarea':
         case 'date':
         case 'datetime':
             return field.defaultValue ?? '';
@@ -41,6 +42,7 @@ export function encodeWidgetValue(
 ): StoredWidgetValue {
     switch (field.kind) {
         case 'text':
+        case 'textarea':
         case 'select':
             return String(value);
         case 'number':
@@ -70,6 +72,7 @@ export function decodeWidgetValue(
 ): WidgetFieldValue {
     switch (field.kind) {
         case 'text':
+        case 'textarea':
         case 'select':
             return typeof raw === 'string' ? raw : '';
         case 'number':

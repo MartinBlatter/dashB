@@ -45,7 +45,7 @@ export default function DashboardGrid({
         y: item.y,
         w: item.w,
         h: item.h,
-        minW: item.minW ?? 2,
+        minW: item.minW ?? 1,
         minH: item.minH ?? 2,
     }));
 

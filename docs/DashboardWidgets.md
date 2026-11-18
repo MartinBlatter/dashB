@@ -137,6 +137,7 @@ Every field accepts `name`, `label`, optional `description` and optional
 | `kind`     | Input             | Extra options                                                        |
 | ---------- | ----------------- | -------------------------------------------------------------------- |
 | `text`     | `TextInput`       | `placeholder?`, `maxLength?`, `defaultValue?`                        |
+| `textarea` | `Textarea`        | `placeholder?`, `maxLength?`, `rows?`, `defaultValue?`               |
 | `number`   | `NumberInput`     | `min?`, `max?`, `step?`, `defaultValue?`                             |
 | `date`     | `DatePickerInput` | `defaultValue?`                                                      |
 | `datetime` | `DateTimePicker`  | `withSeconds?`, `defaultValue?`                                      |
@@ -181,13 +182,13 @@ Your component receives:
 `config` values arrive in the shape the input produces, not the shape the
 database holds:
 
-| `kind`           | Type in `config` | Note                                                  |
-| ---------------- | ---------------- | ----------------------------------------------------- |
-| `text`, `select` | `string`         | `''` when empty                                       |
-| `number`         | `number \| ''`   | `''` when empty — check before doing maths            |
-| `switch`         | `boolean`        | compare with `=== true`, or `!== false` to default on |
-| `date`           | `string`         | `YYYY-MM-DD`; `valueDate()` gives a `Date`            |
-| `datetime`       | `string`         | `YYYY-MM-DD HH:mm:ss`; `valueDate()` gives a `Date`   |
+| `kind`                       | Type in `config` | Note                                                  |
+| ---------------------------- | ---------------- | ----------------------------------------------------- |
+| `text`, `textarea`, `select` | `string`         | `''` when empty                                       |
+| `number`                     | `number \| ''`   | `''` when empty — check before doing maths            |
+| `switch`                     | `boolean`        | compare with `=== true`, or `!== false` to default on |
+| `date`                       | `string`         | `YYYY-MM-DD`; `valueDate()` gives a `Date`            |
+| `datetime`                   | `string`         | `YYYY-MM-DD HH:mm:ss`; `valueDate()` gives a `Date`   |
 
 Because `config` is typed `Record<string, string | number | boolean>`, narrow
 before use — or use `valueText`, `valueNumber`, `valueDate` from
@@ -559,6 +560,58 @@ The shipped to-do widget is the fuller version of the same shape — read
 `TodoWidget.tsx` with `todo/tasks.ts` next to it for deadline buckets, repeats
 and a `sortKey`.
 
+## When a widget needs more than one file
+
+Everything above holds for a widget whose data the user types in. A widget that
+has to reach outside the browser needs more, and the schedule widget is the
+first one that does. Reach for this only when one of these applies:
+
+| Reason                                             | Why the record store is not enough                                                                                                                                                     |
+| -------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| It talks to the network                            | Fetching a third-party URL from the browser is blocked by CORS, and the URL may be a secret (a calendar feed link grants read access to the whole calendar). It belongs on the server. |
+| It needs a library the browser should not download | `ical.js` only ever runs on the server, so it must not be reachable from a component.                                                                                                  |
+| It stores a payload too big to ship to the client  | `fetchWidgetRecords` returns the whole `data` blob, so an uploaded file of a few hundred KB would land in every page load.                                                             |
+
+What that looks like, using `#/lib/calendar-feeds.ts` as the example:
+
+- **Put the server function in `src/lib/`, not in the widget folder.** It is a
+  server function like any other: `createServerFn`, a Zod validator, and the
+  same ownership check the record store uses — resolve the session with
+  `getRequest()`, then confirm the `dashboard_widget` row belongs to that user.
+  Never accept a user id from the client.
+- **Keep the heavy imports unexported.** Handler bodies are replaced by RPC
+  stubs in the client build, so anything only reachable from a handler is
+  removed with them — `prisma`, `node:` imports and the parser included. A
+  widget may import that module directly for its types and server functions;
+  `TodoWidget.tsx` already imports `#/lib/widget-records.ts`, which imports
+  `prisma`. Verify after a build:
+  `grep -ril "better-sqlite3\|PrismaClient" .output/public` must print nothing.
+- **A server-only collection is just a collection you never read from the
+  client.** The raw `.ics` text lives in a `widget_record` row that no
+  `useWidgetRecords` call ever asks for; only the server function reads it, via
+  `prisma`.
+- **You now own a second query key, and nothing invalidates it for you.**
+  `useWidgetRecords` only invalidates its own key, so a mutation that changes
+  what the server function would return has to invalidate that key explicitly.
+- **There is no cascade between records.** Deleting a row that another
+  collection points at orphans the other row. Delete both in one
+  `prisma.$transaction` in a server function rather than from the component.
+- **Keep timezone conversion on the client.** `dayjs` on the server uses the
+  server's timezone, so a server function must return UTC instants (or
+  date-only strings for all-day values) and let the component format them.
+
+A widget that needs its own stylesheet adds it to the root route's `head()`
+links beside the Mantine ones, so the order is deterministic in dev and in a
+production build. A side-effect `import` of a CSS file inside the widget works
+by accident in dev and becomes chunk-order-dependent in prod.
+
+Finally, if the widget pulls in a large library, keep that library out of the
+eager glob. `registry.ts` imports every `*Widget.tsx` eagerly, so a bare import
+lands in the main chunk and every page pays for it. Put the component that
+touches the library in the subfolder and load it with `lazy()`; `widgetMeta`
+stays in the eager file. `ScheduleWidget.tsx` does this for
+`@mantine/schedule`.
+
 ## Checklist
 
 - [ ] File is directly in `src/components/Dashboard/DashboardWidgets/` and named `*Widget.tsx`
@@ -576,17 +629,19 @@ and a `sortKey`.
 
 ## Reference
 
-| File                                           | Role                                                                               |
-| ---------------------------------------------- | ---------------------------------------------------------------------------------- |
-| `DashboardWidgets/registry.ts`                 | Globs and validates widget files; `getDashboardWidget`, `dashboardWidgetOptions`   |
-| `DashboardWidgets/types.ts`                    | `DashboardWidgetMeta`, `DashboardWidgetProps`, `DashboardWidgetSize`               |
-| `DashboardWidgets/TodoWidget.tsx`, `todo/`     | The shipped to-do widget and its helpers                                           |
-| `Dashboard.tsx`                                | Loads instances, builds grid items, persists placement                             |
-| `DashboardGrid.tsx`                            | The 12-column grid, drag handle wiring, resize handles                             |
-| `WidgetFrame.tsx`                              | Header bar, drag handle, edit/delete menu, scrolling body                          |
-| `AddWidgetModal.tsx`                           | The picker and the add form                                                        |
-| `EditWidgetModal.tsx`, `DeleteWidgetModal.tsx` | Editing one instance, and the delete confirmation                                  |
-| `#/components/Widgets/`                        | The shared field system: types, registry factory, values, validation, `FieldsForm` |
-| `#/lib/dashboard-widgets.ts`                   | Server functions for instances and placement                                       |
-| `#/lib/widget-records.ts`                      | Server functions and `useWidgetRecords` for stored rows                            |
-| `prisma/schema.prisma`                         | `DashboardWidget` and `WidgetRecord`                                               |
+| File                                                               | Role                                                                                                        |
+| ------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------- |
+| `DashboardWidgets/registry.ts`                                     | Globs and validates widget files; `getDashboardWidget`, `dashboardWidgetOptions`                            |
+| `DashboardWidgets/types.ts`                                        | `DashboardWidgetMeta`, `DashboardWidgetProps`, `DashboardWidgetSize`                                        |
+| `DashboardWidgets/TodoWidget.tsx`, `todo/`                         | The shipped to-do widget and its helpers                                                                    |
+| `DashboardWidgets/ScheduleWidget.tsx`, `schedule/`                 | The shipped schedule widget; the example of a widget with its own server function and a lazy-loaded library |
+| `Dashboard.tsx`                                                    | Loads instances, builds grid items, persists placement                                                      |
+| `DashboardGrid.tsx`                                                | The 12-column grid, drag handle wiring, resize handles                                                      |
+| `WidgetFrame.tsx`                                                  | Header bar, drag handle, edit/delete menu, scrolling body                                                   |
+| `AddWidgetModal.tsx`                                               | The picker and the add form                                                                                 |
+| `EditWidgetModal.tsx`, `DeleteWidgetModal.tsx`                     | Editing one instance, and the delete confirmation                                                           |
+| `#/components/Widgets/`                                            | The shared field system: types, registry factory, values, validation, `FieldsForm`                          |
+| `#/lib/dashboard-widgets.ts`                                       | Server functions for instances and placement                                                                |
+| `#/lib/widget-records.ts`                                          | Server functions and `useWidgetRecords` for stored rows                                                     |
+| `#/lib/calendar-feeds.ts`, `#/lib/ics.ts`, `#/lib/calendar-url.ts` | Calendar feed fetching with its SSRF guard and cache, the `ical.js` parser, and URL normalisation           |
+| `prisma/schema.prisma`                                             | `DashboardWidget` and `WidgetRecord`                                                                        |

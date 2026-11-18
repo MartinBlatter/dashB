@@ -11,7 +11,8 @@ function widgetFieldSchema(
     const required = field.required ?? false;
 
     switch (field.kind) {
-        case 'text': {
+        case 'text':
+        case 'textarea': {
             let schema = z.string();
 
             if (field.maxLength !== undefined) {

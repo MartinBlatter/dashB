@@ -22,6 +22,14 @@ export interface WidgetTextField extends WidgetFieldBase {
     defaultValue?: string;
 }
 
+export interface WidgetTextareaField extends WidgetFieldBase {
+    kind: 'textarea';
+    placeholder?: () => string;
+    maxLength?: number;
+    rows?: number;
+    defaultValue?: string;
+}
+
 export interface WidgetNumberField extends WidgetFieldBase {
     kind: 'number';
     min?: number;
@@ -54,6 +62,7 @@ export interface WidgetSwitchField extends WidgetFieldBase {
 
 export type WidgetField =
     | WidgetTextField
+    | WidgetTextareaField
     | WidgetNumberField
     | WidgetDateField
     | WidgetDateTimeField
@@ -62,7 +71,7 @@ export type WidgetField =
 
 export const widgetFieldKinds: ReadonlySet<WidgetField['kind']> = new Set<
     WidgetField['kind']
->(['text', 'number', 'date', 'datetime', 'select', 'switch']);
+>(['text', 'textarea', 'number', 'date', 'datetime', 'select', 'switch']);
 
 export const labelFieldName = 'label';
 
