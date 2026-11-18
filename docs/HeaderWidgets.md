@@ -1,12 +1,18 @@
 # Creating a header widget
 
 Header widgets are the small readouts centred in the app header — a countdown, a
-clock, anything that shows a bit of live information.
+clock, anything that shows a bit of live information. For a card on the
+dashboard that can store data and be interacted with, see
+[Creating a dashboard widget](DashboardWidgets.md) instead.
 
 Adding one means **adding one file**. There is no registration list to update,
 no entry in `messages/*.json`, no database change, and no form to build. The
 registry discovers your file at build time and everything else follows from what
 your file declares.
+
+The field system, translations helper and clock hook described below live in
+[src/components/Widgets/](../src/components/Widgets/) and are shared with
+dashboard widgets, so a change there affects both.
 
 ## The shortest working widget
 
@@ -15,7 +21,7 @@ Create `src/components/Header/HeaderWidgets/HelloWidget.tsx`:
 ```tsx
 import { Text } from '@mantine/core';
 
-import { createWidgetMessages } from './i18n';
+import { createWidgetMessages } from '#/components/Widgets/i18n';
 
 import type { HeaderWidgetMeta, HeaderWidgetProps } from './types';
 
@@ -126,13 +132,14 @@ fields: [
 Every field accepts `name`, `label`, optional `description`, and optional
 `required`. Beyond that:
 
-| `kind`     | Input            | Extra options                                                        |
-| ---------- | ---------------- | -------------------------------------------------------------------- |
-| `text`     | `TextInput`      | `placeholder?`, `maxLength?`, `defaultValue?`                        |
-| `number`   | `NumberInput`    | `min?`, `max?`, `step?`, `defaultValue?`                             |
-| `datetime` | `DateTimePicker` | `withSeconds?`, `defaultValue?`                                      |
-| `select`   | `Select`         | `options: () => Array<{ value, label }>` (required), `defaultValue?` |
-| `switch`   | `Switch`         | `defaultValue?`                                                      |
+| `kind`     | Input             | Extra options                                                        |
+| ---------- | ----------------- | -------------------------------------------------------------------- |
+| `text`     | `TextInput`       | `placeholder?`, `maxLength?`, `defaultValue?`                        |
+| `number`   | `NumberInput`     | `min?`, `max?`, `step?`, `defaultValue?`                             |
+| `date`     | `DatePickerInput` | `defaultValue?`                                                      |
+| `datetime` | `DateTimePicker`  | `withSeconds?`, `defaultValue?`                                      |
+| `select`   | `Select`          | `options: () => Array<{ value, label }>` (required), `defaultValue?` |
+| `switch`   | `Switch`          | `defaultValue?`                                                      |
 
 `options` is a function for the same reason labels are: option labels follow the
 active locale.
@@ -140,8 +147,8 @@ active locale.
 `required` has no effect on a `switch` — a switch is always either on or off.
 
 Validation is derived from what you declare. `required`, `min`, `max` and
-`maxLength` are enforced at submit with messages from `messages/*.json`; you do
-not write a schema.
+`maxLength` are enforced at submit with messages from `messages/*.json` under
+`widget.form.*`; you do not write a schema.
 
 ### `name` is a storage key
 
@@ -150,11 +157,14 @@ Each field's `name` becomes a key in the `header_widget.config` JSON column.
 the field falls back to its default. Adding a new field to an existing widget is
 safe: instances saved before it appeared get its `defaultValue`.
 
+`label` is **reserved** — it is the instance name every widget gets, so the
+registry rejects a field called `label`.
+
 ## Reading the config in your component
 
 ```tsx
 export default function CountdownWidget({ label, config }: HeaderWidgetProps) {
-    const target = configDate(config, 'target');
+    const target = valueDate(config, 'target');
     const withSeconds = config.showSeconds === true;
     // ...
 }
@@ -171,15 +181,17 @@ Your component receives:
 `config` values come back in the shape the input produces, not the shape the
 database holds:
 
-| `kind`           | Type in `config` | Note                                                      |
-| ---------------- | ---------------- | --------------------------------------------------------- |
-| `text`, `select` | `string`         | `''` when empty                                           |
-| `number`         | `number \| ''`   | `''` when empty — check for it before doing maths         |
-| `switch`         | `boolean`        | compare with `=== true`                                   |
-| `datetime`       | `string`         | `YYYY-MM-DD HH:mm:ss`; use `configDate()` to get a `Date` |
+| `kind`           | Type in `config` | Note                                                     |
+| ---------------- | ---------------- | -------------------------------------------------------- |
+| `text`, `select` | `string`         | `''` when empty                                          |
+| `number`         | `number \| ''`   | `''` when empty — check for it before doing maths        |
+| `switch`         | `boolean`        | compare with `=== true`                                  |
+| `date`           | `string`         | `YYYY-MM-DD`; use `valueDate()` to get a `Date`          |
+| `datetime`       | `string`         | `YYYY-MM-DD HH:mm:ss`; use `valueDate()` to get a `Date` |
 
 Because `config` is typed as `Record<string, string | number | boolean>`, narrow
-before use:
+before use — or use `valueText`, `valueNumber` and `valueDate` from
+`#/components/Widgets/values`:
 
 ```ts
 const zone = typeof config.zone === 'string' ? config.zone : 'UTC';
@@ -190,12 +202,13 @@ reaching your component as `undefined` or crashing.
 
 ## Helpers you can use
 
-| Helper                                           | From         | What it does                                                                  |
-| ------------------------------------------------ | ------------ | ----------------------------------------------------------------------------- |
-| `createWidgetMessages`                           | `./i18n`     | Your widget's own translations.                                               |
-| `configDate(config, name)`                       | `./values`   | Reads a `datetime` field as a `Date`, or `undefined` if unset or unparseable. |
-| `useNow(intervalMs?)`                            | `./useNow`   | A ticking `Date`, defaulting to one second. Returns `null` until mounted.     |
-| `formatDuration(ms, { withSeconds, daySuffix })` | `./duration` | `3d 04:12:09` style output, clamped at zero.                                  |
+| Helper                                           | From                          | What it does                                                                            |
+| ------------------------------------------------ | ----------------------------- | --------------------------------------------------------------------------------------- |
+| `createWidgetMessages`                           | `#/components/Widgets/i18n`   | Your widget's own translations.                                                         |
+| `valueDate(config, name)`                        | `#/components/Widgets/values` | Reads a `date` or `datetime` field as a `Date`, or `undefined` if unset or unparseable. |
+| `valueText`, `valueNumber`                       | `#/components/Widgets/values` | Narrow one `config` value with a fallback.                                              |
+| `useNow(intervalMs?)`                            | `#/components/Widgets/useNow` | A ticking `Date`, defaulting to one second. Returns `null` until mounted.               |
+| `formatDuration(ms, { withSeconds, daySuffix })` | `./duration`                  | `3d 04:12:09` style output, clamped at zero.                                            |
 
 ### Why `useNow` returns `null` first
 
@@ -223,7 +236,8 @@ reason.
 - **Validation** — derived from your field declarations.
 - **Storage** — one `header_widget` row with your values in its `config` JSON
   column. `datetime` is normalised to UTC ISO so a stored value does not depend
-  on the timezone it was entered in; an empty optional field stores `null`.
+  on the timezone it was entered in, `date` is stored as `YYYY-MM-DD`, and an
+  empty optional field stores `null`.
 - **Ordering** — new widgets are appended to the right; users drag to reorder.
   You have no say in instance placement.
 - **Centring** — the wrapper centres text, so a plain `<div>` of `<Text>` lines
@@ -256,6 +270,7 @@ name the offending file:
 - `label` that is not a function
 - a `type` already used by another widget file
 - a field with no `name`, a duplicate `name`, or an unknown `kind`
+- a field named `label`, which is reserved
 
 ## Editing an existing widget
 
@@ -294,8 +309,8 @@ A world clock, exercising a `select`, a `switch` and the `useNow` helper. Save a
 ```tsx
 import { Text } from '@mantine/core';
 
-import { createWidgetMessages } from './i18n';
-import { useNow } from './useNow';
+import { createWidgetMessages } from '#/components/Widgets/i18n';
+import { useNow } from '#/components/Widgets/useNow';
 
 import type { HeaderWidgetMeta, HeaderWidgetProps } from './types';
 
@@ -369,7 +384,7 @@ export default function WorldClockWidget({ label, config }: HeaderWidgetProps) {
 - [ ] `type` is unique and one you will never rename
 - [ ] `label`, `description`, field `label`s and `options` are all functions
 - [ ] Every locale is covered in `createWidgetMessages`
-- [ ] Field `name`s are unique and ones you will never rename
+- [ ] No field named `label`; field `name`s are unique and ones you will never rename
 - [ ] `config` values are narrowed before use
 - [ ] Renders the user's `label` prop, not the widget kind name
 - [ ] Handles `useNow()` returning `null`
@@ -377,18 +392,29 @@ export default function WorldClockWidget({ label, config }: HeaderWidgetProps) {
 
 ## Reference
 
-| File                             | Role                                                                       |
-| -------------------------------- | -------------------------------------------------------------------------- |
-| `registry.ts`                    | Globs and validates widget files; `getHeaderWidget`, `headerWidgetOptions` |
-| `types.ts`                       | `HeaderWidgetMeta`, `HeaderWidgetProps`, the `WidgetField` union           |
-| `i18n.ts`                        | `createWidgetMessages`                                                     |
-| `values.ts`                      | Encoding to and from the `config` column; `configDate`                     |
-| `validation.ts`                  | Builds the submit validator from field declarations                        |
-| `WidgetConfigFields.tsx`         | Maps each field kind to a bound input                                      |
-| `WidgetForm.tsx`                 | The form body, shared by the add and edit modals                           |
-| `useNow.ts`, `duration.ts`       | Ticking clock and duration formatting helpers                              |
-| `HeaderWidgetBar.tsx`            | Renders, reorders and opens the editor for instances                       |
-| `../AddHeaderWidgetModal.tsx`    | The picker and the add form                                                |
-| `../EditHeaderWidgetModal.tsx`   | The edit form for one instance, and the delete entry point                 |
-| `../DeleteHeaderWidgetModal.tsx` | The delete confirmation                                                    |
-| `#/lib/header-widgets.ts`        | Server functions, query and mutation                                       |
+Inside `src/components/Header/HeaderWidgets/`:
+
+| File                             | Role                                                                                         |
+| -------------------------------- | -------------------------------------------------------------------------------------------- |
+| `registry.ts`                    | Applies the shared registry factory to this folder; `getHeaderWidget`, `headerWidgetOptions` |
+| `types.ts`                       | `HeaderWidgetMeta`, `HeaderWidgetProps`, `HeaderWidgetDefinition`                            |
+| `duration.ts`                    | Duration formatting helper                                                                   |
+| `HeaderWidgetBar.tsx`            | Renders, reorders and opens the editor for instances                                         |
+| `../AddHeaderWidgetModal.tsx`    | The picker and the add form                                                                  |
+| `../EditHeaderWidgetModal.tsx`   | The edit form for one instance, and the delete entry point                                   |
+| `../DeleteHeaderWidgetModal.tsx` | The delete confirmation                                                                      |
+| `#/lib/header-widgets.ts`        | Server functions, query and mutation                                                         |
+
+The parts shared with dashboard widgets, in `src/components/Widgets/`:
+
+| File              | Role                                                                    |
+| ----------------- | ----------------------------------------------------------------------- |
+| `types.ts`        | The `WidgetField` union and the stored/form value types                 |
+| `registry.ts`     | `createWidgetRegistry` — the glob, validation and picker options        |
+| `i18n.ts`         | `createWidgetMessages`                                                  |
+| `values.ts`       | Encoding to and from the `config` column; `valueDate` and friends       |
+| `validation.ts`   | Builds the submit validator from field declarations                     |
+| `FieldInputs.tsx` | Maps each field kind to a bound input                                   |
+| `FieldsForm.tsx`  | The form body, shared by the add and edit modals of both widget systems |
+| `config.ts`       | Prepends the reserved **Name** field and splits it back off on submit   |
+| `useNow.ts`       | Ticking clock hook                                                      |

@@ -1,16 +1,16 @@
 import { withForm } from '#/components/Form/Form';
 
-import type { WidgetConfig, WidgetField } from './types';
+import type { WidgetField, WidgetValues } from './types';
 
-const emptyConfig: WidgetConfig = {};
+const emptyValues: WidgetValues = {};
 
-export const WidgetConfigFields = withForm({
-    defaultValues: { label: '', config: emptyConfig },
+export const FieldInputs = withForm({
+    defaultValues: { values: emptyValues },
     props: { fields: [] as ReadonlyArray<WidgetField> },
     render: ({ form, fields }) => (
         <>
             {fields.map((field) => (
-                <form.AppField key={field.name} name={`config.${field.name}`}>
+                <form.AppField key={field.name} name={`values.${field.name}`}>
                     {(bound) => {
                         const label = field.label();
                         const description = field.description?.();
@@ -35,6 +35,15 @@ export const WidgetConfigFields = withForm({
                                         min={field.min}
                                         max={field.max}
                                         step={field.step}
+                                        withAsterisk={field.required}
+                                    />
+                                );
+
+                            case 'date':
+                                return (
+                                    <bound.DateField
+                                        label={label}
+                                        description={description}
                                         withAsterisk={field.required}
                                     />
                                 );

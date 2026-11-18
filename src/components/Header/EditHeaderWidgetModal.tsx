@@ -2,15 +2,19 @@ import { Button, Divider, Modal, Stack } from '@mantine/core';
 import { TrashIcon } from '@phosphor-icons/react';
 import { useQueryClient } from '@tanstack/react-query';
 
+import FieldsForm from '#/components/Widgets/FieldsForm';
+import {
+    splitWidgetConfig,
+    widgetConfigFields,
+    widgetConfigValues,
+} from '#/components/Widgets/config';
 import {
     headerWidgetsQueryKey,
     updateHeaderWidget,
 } from '#/lib/header-widgets';
 import { m } from '#/paraglide/messages';
 
-import WidgetForm from './HeaderWidgets/WidgetForm';
 import { getHeaderWidget } from './HeaderWidgets/registry';
-import { fromStoredConfig } from './HeaderWidgets/values';
 
 import type { HeaderWidgetInstance } from '#/lib/header-widgets';
 
@@ -34,16 +38,19 @@ export default function EditHeaderWidgetModal({
         >
             {instance && widget ? (
                 <Stack gap="md">
-                    <WidgetForm
+                    <FieldsForm
                         key={instance.id}
-                        widget={widget}
-                        initialLabel={instance.label}
-                        initialConfig={fromStoredConfig(
+                        fields={widgetConfigFields(widget.fields)}
+                        description={widget.description?.()}
+                        initialValues={widgetConfigValues(
                             widget.fields,
+                            instance.label,
                             instance.config
                         )}
                         submitLabel={m['header.save_widget']()}
-                        onSubmit={async ({ label, config }) => {
+                        onSubmit={async (values) => {
+                            const { label, config } = splitWidgetConfig(values);
+
                             await updateHeaderWidget({
                                 data: { id: instance.id, label, config },
                             });

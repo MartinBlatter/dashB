@@ -1,0 +1,29 @@
+.dashboard-grid .widget-drag-handle {
+    user-select: none;
+}
+
+.dashboard-grid .react-grid-item.react-draggable-dragging .widget-drag-handle {
+    cursor: grabbing;
+}
+
+.dashboard-grid .react-grid-item.react-grid-placeholder {
+    background: var(--mantine-primary-color-filled);
+    border-radius: var(--mantine-radius-md);
+    opacity: 0.15;
+}
+
+.dashboard-grid .react-grid-item > .react-resizable-handle {
+    opacity: 0.35;
+}
+
+.dashboard-grid .react-grid-item:hover > .react-resizable-handle,
+.dashboard-grid .react-grid-item:focus-within > .react-resizable-handle {
+    opacity: 1;
+}
+
+.dashboard-grid .react-grid-item > .react-resizable-handle::after {
+    width: 7px;
+    height: 7px;
+    border-right-color: var(--mantine-color-dimmed);
+    border-bottom-color: var(--mantine-color-dimmed);
+}

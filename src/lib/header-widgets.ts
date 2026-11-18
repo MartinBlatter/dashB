@@ -6,39 +6,16 @@ import { z } from 'zod';
 import { prisma } from '#/db';
 import { auth } from '#/lib/auth';
 
-import type {
-    StoredWidgetConfig,
-    StoredWidgetValue,
-} from '#/components/Header/HeaderWidgets/types';
+import { asStoredValues } from '#/components/Widgets/values';
+
+import type { StoredWidgetValues } from '#/components/Widgets/types';
 
 export interface HeaderWidgetInstance {
     id: string;
     type: string;
     label: string;
     position: number;
-    config: StoredWidgetConfig;
-}
-
-function isStoredWidgetValue(value: unknown): value is StoredWidgetValue {
-    return (
-        value === null ||
-        typeof value === 'string' ||
-        typeof value === 'number' ||
-        typeof value === 'boolean'
-    );
-}
-
-function toStoredWidgetConfig(value: unknown): StoredWidgetConfig {
-    if (typeof value !== 'object' || value === null || Array.isArray(value)) {
-        return {};
-    }
-
-    return Object.fromEntries(
-        Object.entries(value).filter(
-            (entry): entry is [string, StoredWidgetValue] =>
-                isStoredWidgetValue(entry[1])
-        )
-    );
+    config: StoredWidgetValues;
 }
 
 const storedConfigSchema = z.record(
@@ -96,7 +73,7 @@ export const fetchHeaderWidgets = createServerFn({ method: 'GET' }).handler(
             type: row.type,
             label: row.label,
             position: row.position,
-            config: toStoredWidgetConfig(row.config),
+            config: asStoredValues(row.config),
         }));
     }
 );

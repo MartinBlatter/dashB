@@ -4,13 +4,18 @@ import { useDisclosure } from '@mantine/hooks';
 import { PlusIcon } from '@phosphor-icons/react';
 import { useQueryClient } from '@tanstack/react-query';
 
+import FieldsForm from '#/components/Widgets/FieldsForm';
+import {
+    splitWidgetConfig,
+    widgetConfigFields,
+    widgetConfigValues,
+} from '#/components/Widgets/config';
 import {
     createHeaderWidget,
     headerWidgetsQueryKey,
 } from '#/lib/header-widgets';
 import { m } from '#/paraglide/messages';
 
-import WidgetForm from './HeaderWidgets/WidgetForm';
 import { getHeaderWidget, headerWidgetOptions } from './HeaderWidgets/registry';
 
 export default function AddHeaderWidgetModal() {
@@ -44,11 +49,20 @@ export default function AddHeaderWidgetModal() {
                         nothingFoundMessage={m['header.widget_type_empty']()}
                     />
                     {selected ? (
-                        <WidgetForm
+                        <FieldsForm
                             key={selected.type}
-                            widget={selected}
+                            fields={widgetConfigFields(selected.fields)}
+                            description={selected.description?.()}
+                            initialValues={widgetConfigValues(
+                                selected.fields,
+                                selected.label(),
+                                {}
+                            )}
                             submitLabel={m['header.add_widget']()}
-                            onSubmit={async ({ label, config }) => {
+                            onSubmit={async (values) => {
+                                const { label, config } =
+                                    splitWidgetConfig(values);
+
                                 await createHeaderWidget({
                                     data: {
                                         type: selected.type,

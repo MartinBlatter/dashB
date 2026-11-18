@@ -19,6 +19,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { DotsSixVerticalIcon, PencilSimpleIcon } from '@phosphor-icons/react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
+import { fromStoredValues } from '#/components/Widgets/values';
 import {
     headerWidgetsQueryKey,
     reorderHeaderWidgets,
@@ -29,7 +30,6 @@ import { m } from '#/paraglide/messages';
 import DeleteHeaderWidgetModal from '../DeleteHeaderWidgetModal';
 import EditHeaderWidgetModal from '../EditHeaderWidgetModal';
 import { getHeaderWidget } from './registry';
-import { fromStoredConfig } from './values';
 
 import type { HeaderWidgetInstance } from '#/lib/header-widgets';
 import type { DragEndEvent } from '@dnd-kit/core';
@@ -184,7 +184,7 @@ function SortableWidget({
                 <widget.Component
                     id={instance.id}
                     label={instance.label}
-                    config={fromStoredConfig(widget.fields, instance.config)}
+                    config={fromStoredValues(widget.fields, instance.config)}
                 />
             </Box>
 

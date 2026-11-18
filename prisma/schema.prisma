@@ -23,6 +23,8 @@ model User {
   sessions      Session[]
   accounts      Account[]
   headerWidgets HeaderWidget[]
+  pages         Page[]
+  widgets       DashboardWidget[]
 
   @@unique([email])
   @@map("user")
@@ -89,4 +91,68 @@ model HeaderWidget {
 
   @@index([userId, position])
   @@map("header_widget")
+}
+
+
+// --- Pages ---------------------------------------------------------------------------
+
+model Page {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  slug      String
+  position  Int      @default(0)
+  parentId  String?
+  parent    Page?    @relation("PageToPage", fields: [parentId], references: [id], onDelete: Cascade)
+  children  Page[]   @relation("PageToPage")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, slug])
+  @@unique([parentId, position])
+  @@index([userId, position])
+  @@map("page")
+}
+
+
+// --- Dashboard Widgets --------------------------------------------------------------
+// One row per widget instance, one row per record a widget owns. Widget types are
+// not modelled here: a widget declares its own fields in its module and both
+// `config` and `WidgetRecord.data` hold a flat map of scalars keyed by field name,
+// so a new widget type never needs a schema change.
+
+model DashboardWidget {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String
+  label     String
+  config    Json
+  x         Int      @default(0)
+  y         Int      @default(0)
+  w         Int      @default(4)
+  h         Int      @default(4)
+  records   WidgetRecord[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@map("dashboard_widget")
+}
+
+model WidgetRecord {
+  id         String          @id @default(cuid())
+  widgetId   String
+  widget     DashboardWidget @relation(fields: [widgetId], references: [id], onDelete: Cascade)
+  collection String          @default("default")
+  position   Int             @default(0)
+  sortKey    String?
+  data       Json
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+
+  @@index([widgetId, collection, sortKey])
+  @@index([widgetId, collection, position])
+  @@map("widget_record")
 }

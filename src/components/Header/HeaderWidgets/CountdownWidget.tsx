@@ -1,9 +1,10 @@
 import { Text } from '@mantine/core';
 
+import { createWidgetMessages } from '#/components/Widgets/i18n';
+import { useNow } from '#/components/Widgets/useNow';
+import { valueDate } from '#/components/Widgets/values';
+
 import { formatDuration } from './duration';
-import { createWidgetMessages } from './i18n';
-import { useNow } from './useNow';
-import { configDate } from './values';
 
 import type { HeaderWidgetMeta, HeaderWidgetProps } from './types';
 
@@ -51,7 +52,7 @@ export const widgetMeta = {
 
 export default function CountdownWidget({ label, config }: HeaderWidgetProps) {
     const now = useNow();
-    const target = configDate(config, 'target');
+    const target = valueDate(config, 'target');
 
     const remaining =
         now && target ? target.getTime() - now.getTime() : undefined;

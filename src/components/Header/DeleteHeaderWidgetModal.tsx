@@ -32,7 +32,7 @@ export default function DeleteHeaderWidgetModal({
         try {
             await deleteHeaderWidget({ data: { id: instance.id } });
         } catch {
-            setError(m['header.widget_form.delete_failed']());
+            setError(m['widget.form.delete_failed']());
             setPending(false);
             return;
         }

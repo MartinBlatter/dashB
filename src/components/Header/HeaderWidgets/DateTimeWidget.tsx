@@ -1,7 +1,7 @@
 import { Text } from '@mantine/core';
 
-import { createWidgetMessages } from './i18n';
-import { useNow } from './useNow';
+import { createWidgetMessages } from '#/components/Widgets/i18n';
+import { useNow } from '#/components/Widgets/useNow';
 
 import type { HeaderWidgetMeta, HeaderWidgetProps } from './types';
 

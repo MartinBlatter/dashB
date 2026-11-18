@@ -77,7 +77,24 @@ src/
   paraglide/         generated i18n runtime (regenerated on dev/build)
 messages/            translation sources: en.json, de.json
 prisma/schema.prisma database schema
+docs/                how to extend the app
 ```
+
+### Widgets
+
+Both widget systems are extended by **adding one file** — the registry globs it
+at build time, and the picker, the settings form, validation and storage all
+follow from what the file declares:
+
+- [docs/DashboardWidgets.md](docs/DashboardWidgets.md) — cards on the dashboard
+  grid. These may store rows of their own data, which all widgets share through
+  the generic `widget_record` table, so a new widget type never needs a schema
+  change.
+- [docs/HeaderWidgets.md](docs/HeaderWidgets.md) — the small readouts in the
+  header.
+
+The field declarations, generated form, validation and i18n helper they share
+live in [src/components/Widgets/](src/components/Widgets/).
 
 ### Routes
 
@@ -139,7 +156,7 @@ import { m } from '#/paraglide/messages';
 ```
 
 Locale lives in the URL (`/de/...`), switched by
-[LocaleSwitcher](src/components/LocaleSwitcher/LocaleSwitcher.tsx).
+[LocaleSwitcher](src/components/Header/LocaleSwitcher.tsx).
 
 ## Deployment
 

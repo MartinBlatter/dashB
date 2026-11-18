@@ -28,6 +28,7 @@ import { getLocale } from '#/paraglide/runtime';
 
 import type { QueryClient } from '@tanstack/react-query';
 import Navbar from '#/components/Navbar/Navbar';
+import NavbarMenu from '#/components/Navbar/NavbarMenu';
 import { isPublicPath } from '#/lib/auth-routes';
 import { sessionQueryOptions, useSession } from '#/lib/session';
 
@@ -123,6 +124,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
                             </AppShell.Header>
                             <AppShell.Navbar>
                                 <Navbar />
+                                <NavbarMenu />
                             </AppShell.Navbar>
                             <AppShell.Main>{children}</AppShell.Main>
                             <AppShell.Footer>

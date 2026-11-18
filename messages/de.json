@@ -1,13 +1,26 @@
 {
     "$schema": "https://inlang.com/schema/inlang-message-format",
+    "widget": {
+        "label": "Name",
+        "label_placeholder": "Wie dieses Widget benannt wird",
+        "form": {
+            "required": "Dieses Feld ist erforderlich.",
+            "save_failed": "Speichern fehlgeschlagen. Bitte versuche es erneut.",
+            "delete_failed": "Löschen fehlgeschlagen. Bitte versuche es erneut.",
+            "invalid_number": "Bitte gib eine Zahl ein.",
+            "invalid_date": "Bitte gib ein gültiges Datum mit Uhrzeit ein.",
+            "invalid_day": "Bitte gib ein gültiges Datum ein.",
+            "too_long": "Verwende maximal {count} Zeichen.",
+            "too_small": "Verwende {min} oder mehr.",
+            "too_large": "Verwende {max} oder weniger."
+        }
+    },
     "header": {
         "language_label": "Sprache",
         "add_widget": "Widget hinzufügen",
         "widget_type": "Widget-Typ",
         "widget_type_placeholder": "Widget auswählen",
         "widget_type_empty": "Kein passendes Widget",
-        "widget_label": "Name",
-        "widget_label_placeholder": "Wie dieses Widget benannt wird",
         "edit_widget": "Widget bearbeiten",
         "save_widget": "Änderungen speichern",
         "cancel": "Abbrechen",
@@ -15,20 +28,47 @@
         "delete_widget_submit": "Löschen",
         "delete_widget_prompt": "„{label}“ wirklich löschen? Das kann nicht rückgängig gemacht werden.",
         "widget_reorder": "{label} zum Umsortieren ziehen",
-        "widget_edit": "{label} bearbeiten",
-        "widget_form": {
-            "required": "Dieses Feld ist erforderlich.",
-            "save_failed": "Widget konnte nicht gespeichert werden. Bitte versuche es erneut.",
-            "delete_failed": "Widget konnte nicht gelöscht werden. Bitte versuche es erneut.",
-            "invalid_number": "Bitte gib eine Zahl ein.",
-            "invalid_date": "Bitte gib ein gültiges Datum mit Uhrzeit ein.",
-            "too_long": "Verwende maximal {count} Zeichen.",
-            "too_small": "Verwende {min} oder mehr.",
-            "too_large": "Verwende {max} oder weniger."
-        }
+        "widget_edit": "{label} bearbeiten"
+    },
+    "dashboard": {
+        "title": "Dashboard",
+        "intro": "Ziehe Widgets, um sie neu anzuordnen, oder nutze den Anfasser unten rechts, um ihre Größe zu ändern. Über die Schaltfläche rechts fügst du ein neues Widget hinzu",
+        "add_widget": "Widget hinzufügen",
+        "add_widget_submit": "Widget hinzufügen",
+        "empty": "Noch keine Widgets. Füge eins hinzu, um zu starten.",
+        "widget_type": "Widget-Typ",
+        "widget_type_placeholder": "Widget auswählen",
+        "widget_type_empty": "Kein passendes Widget",
+        "edit_widget": "Widget bearbeiten",
+        "save_widget": "Änderungen speichern",
+        "cancel": "Abbrechen",
+        "delete_widget": "Widget löschen",
+        "delete_widget_submit": "Löschen",
+        "delete_widget_prompt": "„{label}“ wirklich löschen? Alle darin gespeicherten Daten werden mitgelöscht.",
+        "widget_drag": "{label} zum Verschieben ziehen",
+        "widget_menu": "Optionen für {label}",
+        "unknown_type": "Der Widget-Typ „{type}“ ist nicht installiert."
     },
     "navbar": {
-        "home": "Startseite"
+        "dashboard": "Dashboard",
+        "label": "Hauptnavigation",
+        "add_page": "Seite hinzufügen",
+        "page_form": {
+            "title": "Titel",
+            "title_placeholder": "Wie diese Seite benannt wird",
+            "slug": "Slug",
+            "slug_placeholder": "meine-seite",
+            "position": "Position",
+            "parent": "Übergeordnete Seite",
+            "parent_placeholder": "Keine übergeordnete Seite",
+            "parent_empty": "Keine passende Seite",
+            "submit": "Seite hinzufügen",
+            "required": "Dieses Feld ist erforderlich.",
+            "invalid_slug": "Verwende Kleinbuchstaben, Zahlen und Bindestriche.",
+            "slug_taken": "Dieser Slug wird bereits verwendet. Bitte wähle einen anderen.",
+            "invalid_number": "Bitte gib eine ganze Zahl ab 0 ein.",
+            "save_failed": "Seite konnte nicht gespeichert werden. Bitte versuche es erneut."
+        }
     },
     "auth": {
         "signInTitle": "Anmelden",

@@ -1,7 +1,24 @@
+import gridLayoutStyles from 'react-grid-layout/css/styles.css?url';
+import dashboardGridStyles from '#/components/Dashboard/grid.css?url';
+
 import { createFileRoute } from '@tanstack/react-router';
 
-export const Route = createFileRoute('/')({ component: App });
+import Dashboard from '#/components/Dashboard/Dashboard';
+
+export const Route = createFileRoute('/')({
+    head: () => ({
+        links: [
+            { rel: 'stylesheet', href: gridLayoutStyles },
+            { rel: 'stylesheet', href: dashboardGridStyles },
+        ],
+    }),
+    component: App,
+});
 
 function App() {
-    return <main></main>;
+    return (
+        <main>
+            <Dashboard />
+        </main>
+    );
 }
