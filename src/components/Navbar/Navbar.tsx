@@ -1,12 +1,25 @@
+import { useState } from 'react';
 import { Box, NavLink } from '@mantine/core';
 import { SquaresFourIcon } from '@phosphor-icons/react';
+
+import { usePageList, usePages } from '#/lib/pages';
 import { m } from '#/paraglide/messages';
-import { usePages } from '#/lib/pages';
-import type { ReactElement } from 'react';
+
+import DeletePageModal from './DeletePageModal';
+import EditPageModal from './EditPageModal';
 import NavTreeNode from './NavTreeNode';
+
+import type { ReactElement } from 'react';
 
 export default function Navbar(): ReactElement {
     const pages = usePages();
+    const flatPages = usePageList();
+    const [editing, setEditing] = useState<string | null>(null);
+    const [deleting, setDeleting] = useState<string | null>(null);
+
+    function pageById(id: string | null) {
+        return flatPages.find((page) => page.id === id) ?? null;
+    }
 
     return (
         <Box component="nav" aria-label={m['navbar.label']()}>
@@ -16,8 +29,30 @@ export default function Navbar(): ReactElement {
                 leftSection={<SquaresFourIcon size={16} />}
             />
             {pages.map((page) => (
-                <NavTreeNode key={page.id} page={page} />
+                <NavTreeNode
+                    key={page.id}
+                    page={page}
+                    onEdit={(target) => setEditing(target.id)}
+                />
             ))}
+
+            <EditPageModal
+                page={pageById(editing)}
+                onClose={() => setEditing(null)}
+                onRequestDelete={() => {
+                    setDeleting(editing);
+                    setEditing(null);
+                }}
+            />
+
+            <DeletePageModal
+                page={pageById(deleting)}
+                onCancel={() => {
+                    setEditing(deleting);
+                    setDeleting(null);
+                }}
+                onDeleted={() => setDeleting(null)}
+            />
         </Box>
     );
 }

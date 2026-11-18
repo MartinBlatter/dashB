@@ -37,6 +37,18 @@ const movePageInput = z.object({
     parentId: z.string().min(1).nullable(),
 });
 
+const updatePageInput = z.object({
+    id: z.string().min(1),
+    title: z.string().min(1),
+    slug: z.string().min(1),
+    position: z.number().int().min(0),
+    parentId: z.string().min(1).nullable(),
+});
+
+const deletePageInput = z.object({
+    id: z.string().min(1),
+});
+
 type TransactionClient = Omit<
     PrismaClient,
     '$connect' | '$disconnect' | '$on' | '$transaction' | '$use' | '$extends'
@@ -95,6 +107,17 @@ async function applyOrder(
     }
 }
 
+async function listPages(
+    tx: TransactionClient,
+    userId: string
+): Promise<Array<PageNode>> {
+    return tx.page.findMany({
+        where: { userId },
+        orderBy: [{ position: 'asc' }, { createdAt: 'asc' }],
+        select: pageSelect,
+    });
+}
+
 async function assertParentExists(
     tx: TransactionClient,
     userId: string,
@@ -138,11 +161,7 @@ export const fetchPages = createServerFn({ method: 'GET' }).handler(
 
         if (!userId) return [];
 
-        return prisma.page.findMany({
-            where: { userId },
-            orderBy: [{ position: 'asc' }, { createdAt: 'asc' }],
-            select: pageSelect,
-        });
+        return listPages(prisma, userId);
     }
 );
 
@@ -231,11 +250,84 @@ export const movePage = createServerFn({ method: 'POST' })
             target.splice(index, 0, page.id);
             await applyOrder(tx, target);
 
-            return tx.page.findMany({
-                where: { userId },
-                orderBy: [{ position: 'asc' }, { createdAt: 'asc' }],
-                select: pageSelect,
+            return listPages(tx, userId);
+        });
+    });
+
+export const updatePage = createServerFn({ method: 'POST' })
+    .validator(updatePageInput)
+    .handler(async ({ data }): Promise<Array<PageNode>> => {
+        const userId = await currentUserId();
+
+        if (!userId) throw new Error('Not signed in');
+
+        return prisma.$transaction(async (tx) => {
+            const page = await tx.page.findFirst({
+                where: { id: data.id, userId },
+                select: { id: true, parentId: true },
             });
+
+            if (!page) throw new Error('Page not found');
+
+            await assertParentExists(tx, userId, data.parentId);
+
+            if (await isSelfOrDescendant(tx, userId, data.parentId, page.id)) {
+                throw new Error(cycleError);
+            }
+
+            const taken = await tx.page.findUnique({
+                where: { userId_slug: { userId, slug: data.slug } },
+                select: { id: true },
+            });
+
+            if (taken && taken.id !== page.id) throw new Error(slugTakenError);
+
+            await tx.page.update({
+                where: { id: page.id },
+                data: {
+                    title: data.title,
+                    slug: data.slug,
+                    parentId: data.parentId,
+                    position: stagedPosition,
+                },
+            });
+
+            if (page.parentId !== data.parentId) {
+                await applyOrder(
+                    tx,
+                    await siblingIds(tx, userId, page.parentId, page.id)
+                );
+            }
+
+            const target = await siblingIds(tx, userId, data.parentId, page.id);
+            const index = Math.min(data.position, target.length);
+
+            target.splice(index, 0, page.id);
+            await applyOrder(tx, target);
+
+            return listPages(tx, userId);
+        });
+    });
+
+export const deletePage = createServerFn({ method: 'POST' })
+    .validator(deletePageInput)
+    .handler(async ({ data }): Promise<Array<PageNode>> => {
+        const userId = await currentUserId();
+
+        if (!userId) throw new Error('Not signed in');
+
+        return prisma.$transaction(async (tx) => {
+            const page = await tx.page.findFirst({
+                where: { id: data.id, userId },
+                select: { id: true, parentId: true },
+            });
+
+            if (!page) throw new Error('Page not found');
+
+            await tx.page.delete({ where: { id: page.id } });
+            await applyOrder(tx, await siblingIds(tx, userId, page.parentId));
+
+            return listPages(tx, userId);
         });
     });
 
@@ -266,6 +358,15 @@ export function buildPageTree(pages: Array<PageNode>): Array<PageTreeNode> {
     }
 
     return roots;
+}
+
+export function descendantIds(
+    pages: Array<PageNode>,
+    id: string
+): Array<string> {
+    return pages
+        .filter((page) => page.parentId === id)
+        .flatMap((page) => [page.id, ...descendantIds(pages, page.id)]);
 }
 
 export function usePageList(): Array<PageNode> {
