@@ -1,7 +1,5 @@
 import { ActionIcon, Box, Group } from '@mantine/core';
 import { ListIcon } from '@phosphor-icons/react';
-import ParaglideLocaleSwitcher from './LocaleSwitcher';
-import ColorSchemeToggle from './ColorSchemeToggle';
 import UserMenu from './UserMenu';
 import AddHeaderWidgetModal from './AddHeaderWidgetModal';
 import HeaderWidgetBar from './HeaderWidgets/HeaderWidgetBar';
@@ -49,8 +47,6 @@ export default function Header({
 
             <Group gap="xs" wrap="nowrap" justify="flex-end">
                 <AddHeaderWidgetModal />
-                <ParaglideLocaleSwitcher />
-                <ColorSchemeToggle />
                 <UserMenu />
             </Group>
         </Box>

@@ -5,8 +5,12 @@ import TiptapImage from '@tiptap/extension-image';
 import { useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 
+import {
+    imageTooLargeError,
+    toInlineImageUrl,
+} from '#/components/Widgets/inlineImage';
+
 import { t } from './i18n';
-import { imageTooLargeError, toInlineImageUrl } from './image';
 import classes from './notes.module.css';
 
 import type { AnyExtension } from '@tiptap/react';

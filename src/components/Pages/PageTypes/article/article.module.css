@@ -1,0 +1,117 @@
+.layout {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--mantine-spacing-xl);
+}
+
+.main {
+    flex: 1;
+    min-width: 0;
+}
+
+.readable {
+    max-width: 50rem;
+}
+
+.outline {
+    position: sticky;
+    top: calc(var(--app-shell-header-offset, 60px) + var(--mantine-spacing-md));
+    flex-shrink: 0;
+    width: 15rem;
+}
+
+.outlineList {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    max-height: 60vh;
+    overflow-y: auto;
+}
+
+.outlineLink {
+    display: block;
+    width: 100%;
+    padding: 2px var(--mantine-spacing-xs);
+    border: none;
+    border-left: 2px solid var(--mantine-color-default-border);
+    border-radius: 0;
+    background: none;
+    color: var(--mantine-color-dimmed);
+    font-size: var(--mantine-font-size-xs);
+    line-height: 1.5;
+    text-align: left;
+    cursor: pointer;
+}
+
+.outlineLink:hover {
+    border-left-color: var(--mantine-primary-color-filled);
+    color: var(--mantine-color-text);
+}
+
+.editor {
+    border: none;
+}
+
+.content :global(.ProseMirror) {
+    min-height: 24rem;
+    padding: var(--mantine-spacing-md) var(--mantine-spacing-lg);
+}
+
+.content :global(.ProseMirror:focus) {
+    outline: none;
+}
+
+.content :global(.ProseMirror > * + *) {
+    margin-top: 0.75em;
+}
+
+.content :global(.ProseMirror h1),
+.content :global(.ProseMirror h2),
+.content :global(.ProseMirror h3),
+.content :global(.ProseMirror h4) {
+    margin-top: 1.4em;
+    margin-bottom: 0;
+    scroll-margin-top: calc(
+        var(--app-shell-header-offset, 60px) + var(--mantine-spacing-xl)
+    );
+}
+
+.content :global(.ProseMirror img) {
+    max-width: 100%;
+    height: auto;
+    border-radius: var(--mantine-radius-sm);
+}
+
+.content :global(.ProseMirror img.ProseMirror-selectednode) {
+    outline: 2px solid var(--mantine-primary-color-filled);
+}
+
+.content :global(.ProseMirror blockquote) {
+    margin-left: 0;
+    padding-left: var(--mantine-spacing-md);
+    border-left: 3px solid var(--mantine-color-default-border);
+    color: var(--mantine-color-dimmed);
+}
+
+.content :global(.ProseMirror pre) {
+    padding: var(--mantine-spacing-sm);
+    border-radius: var(--mantine-radius-sm);
+    background-color: var(--mantine-color-default-hover);
+    overflow-x: auto;
+}
+
+.content :global(.ProseMirror hr) {
+    border: none;
+    border-top: 1px solid var(--mantine-color-default-border);
+}
+
+.markdown textarea {
+    min-height: 24rem;
+    font-family: var(--mantine-font-family-monospace);
+    font-size: var(--mantine-font-size-sm);
+    line-height: 1.6;
+    tab-size: 4;
+}

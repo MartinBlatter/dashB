@@ -17,6 +17,10 @@
     },
     "header": {
         "language_label": "Sprache",
+        "appearance": "Darstellung",
+        "dark_mode": "Dunkelmodus",
+        "on": "ein",
+        "off": "aus",
         "add_widget": "Widget hinzufügen",
         "widget_type": "Widget-Typ",
         "widget_type_placeholder": "Widget auswählen",

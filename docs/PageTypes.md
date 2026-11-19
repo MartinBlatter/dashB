@@ -245,11 +245,15 @@ foreign-keyed to `dashboard_widget`, so it cannot hold rows for a page.
 A page type that needs to persist more than its `config` needs a schema change
 first. Keep settings in `fields` until then.
 
-Two page types have already needed one, and both scope their rows the same way:
+Three page types have already needed one, and all three scope their rows the
+same way:
 
 - `dashboard_widget.pageId` is **nullable** — a `null` row belongs to the main
   dashboard, a row with a page id to that page's own grid.
 - `note.pageId` is **required**, because a note only ever lives on a page.
+- `article.pageId` is **required and unique**, because a page has at most one
+  article. The handler `upsert`s on it, so the row appears on the first save
+  rather than when the type is set.
 
 Either way the column carries `onDelete: Cascade`, so a page's rows go with it,
 and the handler checks the page belongs to the caller before writing. Scope a
@@ -293,6 +297,25 @@ The grid only renders after mount, so anything inside it, an editor included,
 never runs on the server. Keep the grid stylesheets on the route (they are
 already in [$.tsx](../src/routes/$.tsx)).
 
+## One document instead of a grid
+
+The article page type is the other shape a page can take: no grid, one long
+document in one row, autosaved on a debounce. Three parts of it are worth
+copying.
+
+**Keep one storage format.** The row holds the editor's HTML. The Markdown mode
+is a view over that same HTML — `article/markdown.ts` converts with `marked` on
+the way in and `turndown` on the way out — so nothing downstream has to know
+which mode the text was typed in.
+
+**Parse it without a DOM.** `article/outline.ts` pulls the headings and the word
+count out of the HTML with plain string work, no `DOMParser`, so the same
+function runs on the server and in the browser and the two agree.
+
+**Re-mount, don't re-sync.** Tiptap takes its content once, at creation. To push
+externally changed text into it — here, Markdown typed in the other tab — bump a
+counter and pass it as `key` rather than reaching for `setContent`.
+
 ## Server rendering
 
 Pages are server-rendered for signed-in users, so your component renders on the
@@ -309,13 +332,14 @@ server first. The same rules as widgets apply:
 
 ## Helpers you can use
 
-| Helper                                  | From                              | What it does                                            |
-| --------------------------------------- | --------------------------------- | ------------------------------------------------------- |
-| `createWidgetMessages`                  | `#/components/Widgets/i18n`       | Your page type's own translations                       |
-| `useNow(intervalMs?)`                   | `#/components/Widgets/useNow`     | Ticking `Date`, `null` until mounted                    |
-| `valueText`, `valueNumber`, `valueDate` | `#/components/Widgets/values`     | Narrow one `config` value                               |
-| `fromStoredValues`, `toStoredValues`    | `#/components/Widgets/values`     | Convert between stored and form shapes for a field list |
-| `FieldsForm`                            | `#/components/Widgets/FieldsForm` | A validated form for any field list                     |
+| Helper                                  | From                               | What it does                                            |
+| --------------------------------------- | ---------------------------------- | ------------------------------------------------------- |
+| `createWidgetMessages`                  | `#/components/Widgets/i18n`        | Your page type's own translations                       |
+| `useNow(intervalMs?)`                   | `#/components/Widgets/useNow`      | Ticking `Date`, `null` until mounted                    |
+| `valueText`, `valueNumber`, `valueDate` | `#/components/Widgets/values`      | Narrow one `config` value                               |
+| `fromStoredValues`, `toStoredValues`    | `#/components/Widgets/values`      | Convert between stored and form shapes for a field list |
+| `FieldsForm`                            | `#/components/Widgets/FieldsForm`  | A validated form for any field list                     |
+| `toInlineImageUrl`                      | `#/components/Widgets/inlineImage` | Downscale a picked image to a data URL you can store    |
 
 ## What happens automatically
 

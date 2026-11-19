@@ -17,6 +17,10 @@
     },
     "header": {
         "language_label": "Language",
+        "appearance": "Appearance",
+        "dark_mode": "Dark mode",
+        "on": "on",
+        "off": "off",
         "add_widget": "Add widget",
         "widget_type": "Widget type",
         "widget_type_placeholder": "Pick a widget",

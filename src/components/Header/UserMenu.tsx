@@ -1,11 +1,39 @@
 import { useState } from 'react';
-import { Menu, Text, Group, UnstyledButton } from '@mantine/core';
-import { CaretDownIcon, SignOutIcon } from '@phosphor-icons/react';
+import {
+    Group,
+    Menu,
+    Switch,
+    Text,
+    UnstyledButton,
+    useComputedColorScheme,
+    useMantineColorScheme,
+} from '@mantine/core';
+import {
+    CaretDownIcon,
+    CheckIcon,
+    MoonIcon,
+    SignOutIcon,
+    SunIcon,
+} from '@phosphor-icons/react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from '@tanstack/react-router';
 import { m } from '#/paraglide/messages';
+import { getLocale, locales, setLocale } from '#/paraglide/runtime';
 import { authClient } from '#/lib/auth-client';
 import { sessionQueryKey, useSession } from '#/lib/session';
+
+import type { Locale } from '#/components/Widgets/i18n';
+
+function localeName(locale: Locale): string {
+    try {
+        return (
+            new Intl.DisplayNames([locale], { type: 'language' }).of(locale) ??
+            locale.toUpperCase()
+        );
+    } catch {
+        return locale.toUpperCase();
+    }
+}
 
 export default function UserMenu() {
     const router = useRouter();
@@ -13,11 +41,19 @@ export default function UserMenu() {
     const session = useSession();
     const [signingOut, setSigningOut] = useState(false);
 
+    const { setColorScheme } = useMantineColorScheme();
+    const computedColorScheme = useComputedColorScheme('light', {
+        getInitialValueInEffect: true,
+    });
+
     const user = session?.user;
 
     if (!user) {
         return null;
     }
+
+    const dark = computedColorScheme === 'dark';
+    const currentLocale = getLocale();
 
     const signOut = async () => {
         setSigningOut(true);
@@ -46,6 +82,54 @@ export default function UserMenu() {
 
             <Menu.Dropdown>
                 <Menu.Label>{user.email}</Menu.Label>
+
+                <Menu.Divider />
+
+                <Menu.Label>{m['header.appearance']()}</Menu.Label>
+                <Menu.Item
+                    closeMenuOnClick={false}
+                    leftSection={
+                        dark ? <MoonIcon size={16} /> : <SunIcon size={16} />
+                    }
+                    rightSection={
+                        <Switch
+                            size="xs"
+                            checked={dark}
+                            readOnly
+                            tabIndex={-1}
+                            aria-hidden
+                        />
+                    }
+                    aria-label={`${m['header.dark_mode']()}: ${
+                        dark ? m['header.on']() : m['header.off']()
+                    }`}
+                    onClick={() => setColorScheme(dark ? 'light' : 'dark')}
+                >
+                    {m['header.dark_mode']()}
+                </Menu.Item>
+
+                <Menu.Label>{m['header.language_label']()}</Menu.Label>
+                {locales.map((locale) => {
+                    const active = locale === currentLocale;
+
+                    return (
+                        <Menu.Item
+                            key={locale}
+                            aria-current={active ? true : undefined}
+                            rightSection={
+                                active ? <CheckIcon size={14} /> : null
+                            }
+                            onClick={() => {
+                                if (!active) setLocale(locale);
+                            }}
+                        >
+                            {localeName(locale)}
+                        </Menu.Item>
+                    );
+                })}
+
+                <Menu.Divider />
+
                 <Menu.Item
                     leftSection={<SignOutIcon size={16} />}
                     disabled={signingOut}

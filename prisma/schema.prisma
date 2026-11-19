@@ -26,6 +26,7 @@ model User {
   pages         Page[]
   widgets       DashboardWidget[]
   notes         Note[]
+  articles      Article[]
 
   @@unique([email])
   @@map("user")
@@ -111,6 +112,7 @@ model Page {
   config    Json?
   widgets   DashboardWidget[]
   notes     Note[]
+  article   Article?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -173,6 +175,25 @@ model Note {
 
   @@index([userId, pageId])
   @@map("note")
+}
+
+// --- Articles ----------------------------------------------------------------------
+// One row per article page, so `pageId` is unique as well as required. `content` is the
+// editor's HTML, images included as inline data URLs, the same self-contained shape a
+// note uses. The Markdown editing mode converts to and from this HTML and is not stored.
+
+model Article {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pageId    String   @unique
+  page      Page     @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  content   String   @default("")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@map("article")
 }
 
 model WidgetRecord {
