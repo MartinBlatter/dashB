@@ -28,7 +28,12 @@ export const storedValuesSchema = z.record(
     z.union([z.string(), z.number(), z.boolean(), z.null()])
 );
 
+const scopeInput = z.object({
+    pageId: z.string().min(1).nullable(),
+});
+
 const createWidgetInput = z.object({
+    pageId: z.string().min(1).nullable(),
     type: z.string().min(1),
     label: z.string().min(1),
     config: storedValuesSchema,
@@ -74,14 +79,29 @@ const widgetSelect = {
     h: true,
 } as const;
 
-export const fetchDashboardWidgets = createServerFn({ method: 'GET' }).handler(
-    async (): Promise<Array<DashboardWidgetInstance>> => {
+async function assertOwnedPage(
+    userId: string,
+    pageId: string | null
+): Promise<void> {
+    if (!pageId) return;
+
+    const page = await prisma.page.findFirst({
+        where: { id: pageId, userId },
+        select: { id: true },
+    });
+
+    if (!page) throw new Error('Page not found');
+}
+
+export const fetchDashboardWidgets = createServerFn({ method: 'GET' })
+    .validator(scopeInput)
+    .handler(async ({ data }): Promise<Array<DashboardWidgetInstance>> => {
         const userId = await currentUserId();
 
         if (!userId) return [];
 
         const rows = await prisma.dashboardWidget.findMany({
-            where: { userId },
+            where: { userId, pageId: data.pageId },
             orderBy: [{ y: 'asc' }, { x: 'asc' }, { createdAt: 'asc' }],
             select: widgetSelect,
         });
@@ -90,8 +110,7 @@ export const fetchDashboardWidgets = createServerFn({ method: 'GET' }).handler(
             ...row,
             config: asStoredValues(row.config),
         }));
-    }
-);
+    });
 
 export const createDashboardWidget = createServerFn({ method: 'POST' })
     .validator(createWidgetInput)
@@ -100,8 +119,10 @@ export const createDashboardWidget = createServerFn({ method: 'POST' })
 
         if (!userId) throw new Error('Not signed in');
 
+        await assertOwnedPage(userId, data.pageId);
+
         const lowest = await prisma.dashboardWidget.findFirst({
-            where: { userId },
+            where: { userId, pageId: data.pageId },
             orderBy: { y: 'desc' },
             select: { y: true, h: true },
         });
@@ -109,6 +130,7 @@ export const createDashboardWidget = createServerFn({ method: 'POST' })
         const created = await prisma.dashboardWidget.create({
             data: {
                 userId,
+                pageId: data.pageId,
                 type: data.type,
                 label: data.label,
                 config: data.config,
@@ -169,16 +191,28 @@ export const saveDashboardLayout = createServerFn({ method: 'POST' })
         );
     });
 
-export const dashboardWidgetsQueryKey = ['dashboard-widgets'] as const;
+export const dashboardWidgetsQueryKey = (
+    pageId: string | null = null
+): Array<string | null> => ['dashboard-widgets', pageId];
 
-export const dashboardWidgetsQueryOptions = () =>
+export const dashboardWidgetsQueryOptions = (pageId: string | null = null) =>
     queryOptions({
-        queryKey: dashboardWidgetsQueryKey,
-        queryFn: () => fetchDashboardWidgets(),
+        queryKey: dashboardWidgetsQueryKey(pageId),
+        queryFn: () => fetchDashboardWidgets({ data: { pageId } }),
     });
 
-export function useDashboardWidgets(): Array<DashboardWidgetInstance> {
-    const { data } = useQuery(dashboardWidgetsQueryOptions());
+export function useDashboardWidgets(
+    pageId: string | null = null
+): Array<DashboardWidgetInstance> {
+    const { data } = useQuery(dashboardWidgetsQueryOptions(pageId));
 
     return data ?? [];
+}
+
+export function useDashboardWidgetsPending(
+    pageId: string | null = null
+): boolean {
+    const { isPending } = useQuery(dashboardWidgetsQueryOptions(pageId));
+
+    return isPending;
 }

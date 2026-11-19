@@ -4,9 +4,13 @@ import { createServerFn } from '@tanstack/react-start';
 import { getRequest } from '@tanstack/react-start/server';
 import { z } from 'zod';
 
+import { asStoredValues } from '#/components/Widgets/values';
 import { prisma } from '#/db';
 import { auth } from '#/lib/auth';
+import { storedValuesSchema } from '#/lib/dashboard-widgets';
+import { deLocalizePathname } from '#/lib/locale-path';
 
+import type { StoredWidgetValues } from '#/components/Widgets/types';
 import type { PrismaClient } from '#/generated/prisma/client';
 
 export interface PageNode {
@@ -15,6 +19,8 @@ export interface PageNode {
     slug: string;
     position: number;
     parentId: string | null;
+    type: string | null;
+    config: StoredWidgetValues;
 }
 
 export interface PageTreeNode extends PageNode {
@@ -49,6 +55,12 @@ const deletePageInput = z.object({
     id: z.string().min(1),
 });
 
+const setPageTypeInput = z.object({
+    id: z.string().min(1),
+    type: z.string().min(1),
+    config: storedValuesSchema,
+});
+
 type TransactionClient = Omit<
     PrismaClient,
     '$connect' | '$disconnect' | '$on' | '$transaction' | '$use' | '$extends'
@@ -63,7 +75,23 @@ const pageSelect = {
     slug: true,
     position: true,
     parentId: true,
+    type: true,
+    config: true,
 } as const;
+
+interface PageRow {
+    id: string;
+    title: string;
+    slug: string;
+    position: number;
+    parentId: string | null;
+    type: string | null;
+    config: unknown;
+}
+
+function toPageNode(row: PageRow): PageNode {
+    return { ...row, config: asStoredValues(row.config) };
+}
 
 async function currentUserId(): Promise<string | null> {
     const { headers } = getRequest();
@@ -111,11 +139,13 @@ async function listPages(
     tx: TransactionClient,
     userId: string
 ): Promise<Array<PageNode>> {
-    return tx.page.findMany({
+    const rows = await tx.page.findMany({
         where: { userId },
         orderBy: [{ position: 'asc' }, { createdAt: 'asc' }],
         select: pageSelect,
     });
+
+    return rows.map(toPageNode);
 }
 
 async function assertParentExists(
@@ -196,18 +226,13 @@ export const createPage = createServerFn({ method: 'POST' })
                     position: stagedPosition,
                     parentId: data.parentId,
                 },
-                select: {
-                    id: true,
-                    title: true,
-                    slug: true,
-                    parentId: true,
-                },
+                select: pageSelect,
             });
 
             siblings.splice(index, 0, created.id);
             await applyOrder(tx, siblings);
 
-            return { ...created, position: index };
+            return toPageNode({ ...created, position: index });
         });
     });
 
@@ -331,6 +356,28 @@ export const deletePage = createServerFn({ method: 'POST' })
         });
     });
 
+export const setPageType = createServerFn({ method: 'POST' })
+    .validator(setPageTypeInput)
+    .handler(async ({ data }): Promise<Array<PageNode>> => {
+        const userId = await currentUserId();
+
+        if (!userId) throw new Error('Not signed in');
+
+        const page = await prisma.page.findFirst({
+            where: { id: data.id, userId },
+            select: { id: true },
+        });
+
+        if (!page) throw new Error('Page not found');
+
+        await prisma.page.update({
+            where: { id: page.id },
+            data: { type: data.type, config: data.config },
+        });
+
+        return listPages(prisma, userId);
+    });
+
 export const pagesQueryKey = ['pages'] as const;
 
 export const pagesQueryOptions = () =>
@@ -367,6 +414,61 @@ export function descendantIds(
     return pages
         .filter((page) => page.parentId === id)
         .flatMap((page) => [page.id, ...descendantIds(pages, page.id)]);
+}
+
+export function pathSegments(path: string): Array<string> {
+    const absolute = path.startsWith('/') ? path : `/${path}`;
+
+    return deLocalizePathname(absolute)
+        .split('/')
+        .filter((segment) => segment.length > 0);
+}
+
+export function pageTrail(pages: Array<PageNode>, id: string): Array<PageNode> {
+    const byId = new Map(pages.map((page) => [page.id, page]));
+    const trail: Array<PageNode> = [];
+    const seen = new Set<string>();
+
+    let current = byId.get(id);
+
+    while (current && !seen.has(current.id)) {
+        seen.add(current.id);
+        trail.push(current);
+        current = current.parentId ? byId.get(current.parentId) : undefined;
+    }
+
+    return trail.reverse();
+}
+
+export function pagePath(pages: Array<PageNode>, id: string): string {
+    return `/${pageTrail(pages, id)
+        .map((page) => page.slug)
+        .join('/')}`;
+}
+
+export function resolvePagePath(
+    pages: Array<PageNode>,
+    segments: Array<string>
+): PageNode | null {
+    const slug = segments.at(-1);
+
+    if (!slug) return null;
+
+    return pages.find((page) => page.slug === slug) ?? null;
+}
+
+export function isCanonicalPath(
+    pages: Array<PageNode>,
+    page: PageNode,
+    segments: Array<string>
+): boolean {
+    return pagePath(pages, page.id) === `/${segments.join('/')}`;
+}
+
+export function usePagesPending(): boolean {
+    const { isPending } = useQuery(pagesQueryOptions());
+
+    return isPending;
 }
 
 export function usePageList(): Array<PageNode> {

@@ -11,9 +11,11 @@ import { m } from '#/paraglide/messages';
 import type { DashboardWidgetInstance } from '#/lib/dashboard-widgets';
 
 export default function DeleteWidgetModal({
+    pageId,
     instance,
     onClose,
 }: {
+    pageId: string | null;
     instance: DashboardWidgetInstance | null;
     onClose: () => void;
 }) {
@@ -36,7 +38,7 @@ export default function DeleteWidgetModal({
         }
 
         await queryClient.invalidateQueries({
-            queryKey: dashboardWidgetsQueryKey,
+            queryKey: dashboardWidgetsQueryKey(pageId),
         });
 
         setPending(false);

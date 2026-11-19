@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { Box, NavLink } from '@mantine/core';
 import { SquaresFourIcon } from '@phosphor-icons/react';
+import { Link } from '@tanstack/react-router';
 
-import { usePageList, usePages } from '#/lib/pages';
+import { usePageList, usePages, usePagesPending } from '#/lib/pages';
 import { m } from '#/paraglide/messages';
 
 import DeletePageModal from './DeletePageModal';
 import EditPageModal from './EditPageModal';
+import NavSkeleton from './NavSkeleton';
 import NavTreeNode from './NavTreeNode';
 
 import type { ReactElement } from 'react';
@@ -14,6 +16,7 @@ import type { ReactElement } from 'react';
 export default function Navbar(): ReactElement {
     const pages = usePages();
     const flatPages = usePageList();
+    const pending = usePagesPending();
     const [editing, setEditing] = useState<string | null>(null);
     const [deleting, setDeleting] = useState<string | null>(null);
 
@@ -22,19 +25,28 @@ export default function Navbar(): ReactElement {
     }
 
     return (
-        <Box component="nav" aria-label={m['navbar.label']()}>
+        <Box
+            component="nav"
+            aria-label={m['navbar.label']()}
+            aria-busy={pending}
+        >
             <NavLink
-                href="/"
+                renderRoot={(props) => <Link to="/" {...props} />}
                 label={m['navbar.dashboard']()}
                 leftSection={<SquaresFourIcon size={16} />}
             />
-            {pages.map((page) => (
-                <NavTreeNode
-                    key={page.id}
-                    page={page}
-                    onEdit={(target) => setEditing(target.id)}
-                />
-            ))}
+            {pending ? (
+                <NavSkeleton />
+            ) : (
+                pages.map((page) => (
+                    <NavTreeNode
+                        key={page.id}
+                        page={page}
+                        pages={flatPages}
+                        onEdit={(target) => setEditing(target.id)}
+                    />
+                ))
+            )}
 
             <EditPageModal
                 page={pageById(editing)}

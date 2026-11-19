@@ -24,6 +24,25 @@ export interface DashboardGridPlacement {
 
 export const dragHandleClass = 'widget-drag-handle';
 
+export function changedPlacements(
+    current: ReadonlyArray<DashboardGridPlacement>,
+    next: ReadonlyArray<DashboardGridPlacement>
+): Array<DashboardGridPlacement> {
+    const byId = new Map(current.map((item) => [item.id, item]));
+
+    return next.filter((placement) => {
+        const item = byId.get(placement.id);
+
+        return (
+            item !== undefined &&
+            (item.x !== placement.x ||
+                item.y !== placement.y ||
+                item.w !== placement.w ||
+                item.h !== placement.h)
+        );
+    });
+}
+
 const cols = 12;
 const rowHeight = 60;
 const margin: [number, number] = [12, 12];

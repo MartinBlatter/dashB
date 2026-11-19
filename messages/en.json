@@ -84,6 +84,18 @@
             "save_failed": "Could not save the page. Please try again."
         }
     },
+    "page": {
+        "not_found": "That page does not exist.",
+        "breadcrumbs": "Breadcrumb",
+        "no_type_title": "This page has no type yet",
+        "no_type_hint": "A page type decides what this page shows. Pick one to get started.",
+        "set_type": "Set page type",
+        "set_type_submit": "Save",
+        "type": "Page type",
+        "type_placeholder": "Pick a page type",
+        "type_empty": "No page types found",
+        "unknown_type": "The page type \"{type}\" is not installed."
+    },
     "auth": {
         "signInTitle": "Sign in",
         "signInSubtitle": "Sign in to open your dashboard.",

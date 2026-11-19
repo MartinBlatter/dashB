@@ -84,6 +84,18 @@
             "save_failed": "Seite konnte nicht gespeichert werden. Bitte versuche es erneut."
         }
     },
+    "page": {
+        "not_found": "Diese Seite existiert nicht.",
+        "breadcrumbs": "Navigationspfad",
+        "no_type_title": "Diese Seite hat noch keinen Typ",
+        "no_type_hint": "Der Seitentyp bestimmt, was diese Seite anzeigt. Wähle einen aus, um zu beginnen.",
+        "set_type": "Seitentyp festlegen",
+        "set_type_submit": "Speichern",
+        "type": "Seitentyp",
+        "type_placeholder": "Seitentyp wählen",
+        "type_empty": "Keine Seitentypen gefunden",
+        "unknown_type": "Der Seitentyp \"{type}\" ist nicht installiert."
+    },
     "auth": {
         "signInTitle": "Anmelden",
         "signInSubtitle": "Melde dich an, um dein Dashboard zu öffnen.",

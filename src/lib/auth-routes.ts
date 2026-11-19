@@ -1,4 +1,6 @@
-import { isLocale } from '#/paraglide/runtime';
+import { localizeHref } from '#/paraglide/runtime';
+
+import { deLocalizePathname } from '#/lib/locale-path';
 
 /**
  * Routes reachable without a session. Everything else is guarded by the
@@ -6,20 +8,6 @@ import { isLocale } from '#/paraglide/runtime';
  * default and only need to be listed here to be made public.
  */
 export const publicPaths = ['/login', '/register'] as const;
-
-/**
- * Drops a locale prefix added by the Paraglide `url` strategy, so `/de/login`
- * is recognised as the same route as `/login`.
- */
-function deLocalizePathname(pathname: string): string {
-    const [, maybeLocale, ...rest] = pathname.split('/');
-
-    if (maybeLocale && isLocale(maybeLocale)) {
-        return `/${rest.join('/')}`;
-    }
-
-    return pathname;
-}
 
 export function isPublicPath(pathname: string): boolean {
     // Server routes (e.g. Better Auth's own handler) must never be redirected,
@@ -39,11 +27,15 @@ export function isPublicPath(pathname: string): boolean {
  * Keeps a `?redirect=` value app-internal: anything protocol-relative
  * (`//evil.example`) or absolute is discarded so the login page cannot be used
  * as an open redirect.
+ *
+ * The result is localized, because callers pass it to `redirect({ href })` and
+ * a raw `href` bypasses the router's `rewrite.output` — without this, signing
+ * in from `/de/...` would land on the English page.
  */
 export function safeRedirectTarget(target: string | undefined): string {
     if (!target || !target.startsWith('/') || target.startsWith('//')) {
-        return '/';
+        return localizeHref('/');
     }
 
-    return target;
+    return localizeHref(target);
 }

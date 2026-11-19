@@ -1,0 +1,358 @@
+# Creating a page type
+
+Every page in the sidebar renders through **one template**. What that template
+puts inside itself is decided by the page's **type**.
+
+A page type is one file. The registry globs it at build time, so there is no
+registration list to update, no entry in `messages/*.json`, no form to build and
+no database change.
+
+This is the same contract as [dashboard widgets](DashboardWidgets.md), down to
+the field declarations and the generated settings form. If you have written a
+widget you already know this system; the differences are listed at the end.
+
+## The shortest working page type
+
+Create `src/components/Pages/PageTypes/HelloPageType.tsx`:
+
+```tsx
+import { Text } from '@mantine/core';
+
+import { createWidgetMessages } from '#/components/Widgets/i18n';
+
+import type { PageTypeMeta, PageTypeProps } from './types';
+
+const t = createWidgetMessages({
+    en: { label: 'Hello' },
+    de: { label: 'Hallo' },
+});
+
+export const widgetMeta = {
+    type: 'hello',
+    label: () => t('label'),
+} satisfies PageTypeMeta;
+
+export default function HelloPageType({ title }: PageTypeProps) {
+    return <Text size="sm">{title}</Text>;
+}
+```
+
+It now appears in the **Set page type** picker on any page that has no type yet.
+
+## The two required exports
+
+| Export       | What it is                                                                                                |
+| ------------ | --------------------------------------------------------------------------------------------------------- |
+| `widgetMeta` | A `PageTypeMeta` object. Always write it with `satisfies PageTypeMeta` so field kinds stay literal types. |
+| `default`    | The React component, receiving `PageTypeProps`.                                                           |
+
+The meta export is called `widgetMeta`, not `pageTypeMeta`. Page types and
+widgets share one registry factory
+([src/components/Widgets/registry.ts](../src/components/Widgets/registry.ts)),
+which reads that key — so a widget and a page type stay copy-pasteable into each
+other.
+
+### File name and location
+
+The registry globs `./*PageType.tsx`, so the file **must end in `PageType.tsx`**
+and sit **directly** in `src/components/Pages/PageTypes/`. A file named
+`Notes.tsx` is ignored, and so is `notes/ListPageType.tsx`.
+
+That last point is useful: a subfolder is where a page type's helpers belong.
+
+### `widgetMeta`
+
+```ts
+interface PageTypeMeta {
+    type: string; // stable id, persisted
+    label: () => string; // name in the picker
+    description?: () => string; // one-liner above the settings form
+    icon?: Icon; // sidebar icon for pages of this type
+    fields?: ReadonlyArray<WidgetField>; // settings the user fills in
+}
+```
+
+`type` is written into the `page.type` column of every page that uses it.
+**Never rename it once pages use it** — those pages render "page type not
+installed" instead. Rename the file and the label instead.
+
+`label` and `description` are **functions, not strings**, because the active
+locale is only known at render time.
+
+The picker sorts alphabetically by localized label; you cannot choose your
+position in the list.
+
+### `icon`
+
+A Phosphor icon **component**, passed by reference and never rendered in the
+meta — `icon: NoteIcon`, not `icon: <NoteIcon />`. It is what the sidebar shows
+next to every page of your type, so pick one that reads at 16px.
+
+The sidebar falls back on its own when it has to, and you cannot configure
+these:
+
+| Page                       | Icon in the sidebar                           |
+| -------------------------- | --------------------------------------------- |
+| your type, with an `icon`  | your icon                                     |
+| your type, no `icon`       | a plain file                                  |
+| no type set yet            | a dashed file, dimmed                         |
+| type set but not installed | a yellow warning, labelled for screen readers |
+
+The icons are decorative and `aria-hidden`; the page title is already the link
+text. Only the warning carries a label, because it is the one that says
+something the title does not.
+
+## Translations live in your file
+
+Page type strings come from `createWidgetMessages`, so the file is
+self-contained and copy-pasteable between projects:
+
+```ts
+const t = createWidgetMessages({
+    en: { label: 'Notes', empty: 'Nothing here yet' },
+    de: { label: 'Notizen', empty: 'Noch nichts hier' },
+});
+
+t('label');
+```
+
+Every locale in `project.inlang` is **required** by the type, so adding a
+language turns into a compile error in each untranslated page type rather than a
+silent fallback. A key present in one locale but missing in another is also a
+compile error.
+
+Call `t()` during render, never at module scope — it reads the active locale at
+call time. Strings shared across the app, like the not-installed notice, stay in
+`messages/*.json` under `page.*`.
+
+When a page type grows helper components, its `t` moves into the subfolder —
+see `notes/i18n.ts` — so the page type and its parts share one set of strings
+and the page type file still owns them.
+
+## Settings fields
+
+Anything your page type needs from the user goes in `fields`. The **Set page
+type** form is built from this list — you never write form code.
+
+```ts
+fields: [
+    {
+        kind: 'select',
+        name: 'density',
+        label: () => t('density'),
+        defaultValue: 'comfortable',
+        options: () => [
+            { value: 'comfortable', label: t('comfortable') },
+            { value: 'compact', label: t('compact') },
+        ],
+    },
+],
+```
+
+The available kinds are `text`, `textarea`, `number`, `date`, `datetime`,
+`select` and `switch`. They are documented in full, with their per-kind options
+and validation behaviour, in
+[DashboardWidgets.md](DashboardWidgets.md) — the field system is shared and
+behaves identically here.
+
+### `name` is a storage key
+
+Each field's `name` becomes a key in the `page.config` JSON column. **Never
+rename a field once pages use the type** — the old key stops being read and the
+field falls back to its default. Adding a field later is safe: pages saved
+before it appeared get its `defaultValue`.
+
+`label` is **reserved** and the registry rejects a field that uses it. A widget
+needs that name for the instance name the user types; a page has no such input,
+because it already has its own `title` — but the reservation is enforced by the
+shared registry either way, so pick another name.
+
+## Reading the config in your component
+
+```tsx
+export default function NotesPageType({
+    pageId,
+    title,
+    config,
+}: PageTypeProps) {
+    const density = valueText(config, 'density');
+    // ...
+}
+```
+
+Your component receives:
+
+| Prop     | What it is                                                                                          |
+| -------- | --------------------------------------------------------------------------------------------------- |
+| `pageId` | The `page` row id. Use it to scope anything you store.                                              |
+| `title`  | The page title. The template already renders it as the heading, so normally do not render it again. |
+| `config` | Values for your `fields`, keyed by field `name`.                                                    |
+
+Because `config` is typed `Record<string, string | number | boolean>`, narrow
+before use — or use `valueText`, `valueNumber`, `valueDate` from
+[src/components/Widgets/values.ts](../src/components/Widgets/values.ts). A
+missing or corrupt stored value falls back to the field's default rather than
+reaching your component as `undefined`.
+
+Derive from `config` on every render rather than copying it into state on mount.
+
+## The template around your page type
+
+[src/components/Pages/PageView.tsx](../src/components/Pages/PageView.tsx) wraps
+every page. It resolves the page from the URL, renders the heading, and then
+renders one of four things:
+
+| State                            | What the user sees                                  |
+| -------------------------------- | --------------------------------------------------- |
+| no page matches the path         | a not-found notice                                  |
+| `page.type` is `null`            | a hint with a **Set page type** button              |
+| `page.type` is set but not found | a "page type not installed" notice; the row is kept |
+| `page.type` resolves             | your component                                      |
+
+Your component renders the **body only**.
+
+### The heading is a breadcrumb trail
+
+[PageBreadcrumbs.tsx](../src/components/Pages/PageBreadcrumbs.tsx) renders the
+page's ancestors as links followed by the page's own title as the `h2`, so a
+page four levels deep is headed `Notes / Work / Q1 / **Review**`. A root page
+has no ancestors and so renders as a plain title.
+
+The trail comes from `pageTrail(pages, id)` in
+[src/lib/pages.ts](../src/lib/pages.ts), which walks `parentId` to the root;
+`pagePath` is built from the same walk, so a link and a heading can never
+disagree. Nothing here is configurable from a page type.
+
+## URLs
+
+Pages are reachable at their full hierarchy: a page `review` under `q1` under
+`work` under `notes` lives at `/notes/work/q1/review`. The route is the splat
+[src/routes/$.tsx](../src/routes/$.tsx).
+
+Slugs are unique per user, so the **last segment identifies the page** and the
+ancestor segments are validated rather than used for lookup. Any non-canonical
+path that still ends in a known slug redirects to the full one, so links survive
+a page being renamed or reparented.
+
+You do not need to think about this in a page type — but it means `pageId`, not
+the URL, is the thing to key stored data on.
+
+## Storing data
+
+There is **no generic per-page record store**. The `widget_record` table is
+foreign-keyed to `dashboard_widget`, so it cannot hold rows for a page.
+
+A page type that needs to persist more than its `config` needs a schema change
+first. Keep settings in `fields` until then.
+
+Two page types have already needed one, and both scope their rows the same way:
+
+- `dashboard_widget.pageId` is **nullable** — a `null` row belongs to the main
+  dashboard, a row with a page id to that page's own grid.
+- `note.pageId` is **required**, because a note only ever lives on a page.
+
+Either way the column carries `onDelete: Cascade`, so a page's rows go with it,
+and the handler checks the page belongs to the caller before writing. Scope a
+new table the same way rather than inventing a second ownership model.
+
+## Reusing the dashboard
+
+A page type is a plain component, so it can mount an existing feature whole. The
+dashboard page type is the entire `Dashboard` component with one prop:
+
+```tsx
+export default function DashboardPageType({ pageId }: PageTypeProps) {
+    return <Dashboard pageId={pageId} />;
+}
+```
+
+`Dashboard` takes `pageId` (default `null`, the main dashboard) and threads it
+through its query key, its server calls and its three modals, so each grid loads
+and saves only its own widgets. It also drops its own `Dashboard` title when a
+`pageId` is set, because the page template already renders the breadcrumb
+heading — the same courtesy any page type owes the template.
+
+## Reusing the grid without reusing the widgets
+
+The notes page type wants the dashboard's **grid** but its own items. It takes
+only the two pieces it needs from
+[DashboardGrid.tsx](../src/components/Dashboard/DashboardGrid.tsx):
+
+| Export              | What it gives you                                                         |
+| ------------------- | ------------------------------------------------------------------------- |
+| `DashboardGrid`     | The grid itself — drag, resize, 12 columns, client-only mount             |
+| `changedPlacements` | The placements that actually moved, so an idle layout event saves nothing |
+| `dragHandleClass`   | Put it on your card's header, and only that header starts a drag          |
+
+Your card supplies the frame. A control inside the drag handle — notes put the
+title input there — needs
+`onPointerDown={(event) => event.stopPropagation()}`, or the pointer starts a
+drag instead of reaching the control.
+
+The grid only renders after mount, so anything inside it, an editor included,
+never runs on the server. Keep the grid stylesheets on the route (they are
+already in [$.tsx](../src/routes/$.tsx)).
+
+## Server rendering
+
+Pages are server-rendered for signed-in users, so your component renders on the
+server first. The same rules as widgets apply:
+
+- Never call `new Date()` in render for displayed output. Use `useNow` from
+  [src/components/Widgets/useNow.ts](../src/components/Widgets/useNow.ts), which
+  returns `null` until mounted, and handle that `null`.
+- No side-effect CSS imports. A route-level stylesheet goes in the route's
+  `head()` links; otherwise use Mantine props or a CSS module. Every page type
+  shares one route, so a stylesheet added there loads on all of them —
+  [src/routes/$.tsx](../src/routes/$.tsx) already carries the grid styles the
+  dashboard page type needs.
+
+## Helpers you can use
+
+| Helper                                  | From                              | What it does                                            |
+| --------------------------------------- | --------------------------------- | ------------------------------------------------------- |
+| `createWidgetMessages`                  | `#/components/Widgets/i18n`       | Your page type's own translations                       |
+| `useNow(intervalMs?)`                   | `#/components/Widgets/useNow`     | Ticking `Date`, `null` until mounted                    |
+| `valueText`, `valueNumber`, `valueDate` | `#/components/Widgets/values`     | Narrow one `config` value                               |
+| `fromStoredValues`, `toStoredValues`    | `#/components/Widgets/values`     | Convert between stored and form shapes for a field list |
+| `FieldsForm`                            | `#/components/Widgets/FieldsForm` | A validated form for any field list                     |
+
+## What happens automatically
+
+- **Discovery** — the registry globs your file at build time.
+- **The picker** — your page type appears in **Set page type**, sorted
+  alphabetically by localized label, searchable.
+- **The sidebar icon** — every page of your type shows your `icon`, with a
+  fallback when you declare none.
+- **The form** — built from `fields`, with no extra name input.
+- **Validation** — derived from your field declarations.
+- **Storage** — `page.type` and `page.config`; `date` is stored as
+  `YYYY-MM-DD`, `datetime` normalised to UTC ISO, an empty optional field as
+  `null`.
+
+## When you get it wrong
+
+The registry validates every discovered module. In development it **throws** so
+you see it immediately; in production it logs and skips the page type rather
+than taking the app down. Messages are prefixed `[PageTypes]` and name the file:
+
+- no default-exported component, or no `widgetMeta` with a non-empty `type`
+- `label` that is not a function
+- a `type` already used by another page type file
+- a field with no `name`, a duplicate `name`, or an unknown `kind`
+
+A page type that is in the database but no longer in the code is not an error:
+that page renders a "not installed" notice and keeps its row and its config, so
+restoring the file restores the page.
+
+## Differences from a dashboard widget
+
+|                     | Dashboard widget                     | Page type                       |
+| ------------------- | ------------------------------------ | ------------------------------- |
+| File glob           | `*Widget.tsx` in `DashboardWidgets/` | `*PageType.tsx` in `PageTypes/` |
+| Props               | `id`, `label`, `config`              | `pageId`, `title`, `config`     |
+| `defaultSize`       | yes, grid units                      | no, a page fills the main area  |
+| Field named `label` | reserved                             | reserved                        |
+| Instance name       | the user types one                   | the page's own `title`          |
+| Row storage         | `widget_record`                      | its own table, keyed by page    |
+| Instances per type  | many                                 | one per page                    |

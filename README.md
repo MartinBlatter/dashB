@@ -96,6 +96,15 @@ follow from what the file declares:
 The field declarations, generated form, validation and i18n helper they share
 live in [src/components/Widgets/](src/components/Widgets/).
 
+### Pages
+
+Every page except the dashboard renders through one template, and what it shows
+is decided by the page's **type**. Page types are added the same way as widgets
+— one file, globbed at build time, reusing the same field declarations:
+
+- [docs/PageTypes.md](docs/PageTypes.md) — the page template, the type registry
+  and how to write a type.
+
 ### Routes
 
 Adding a file under [src/routes/](src/routes/) adds a route;

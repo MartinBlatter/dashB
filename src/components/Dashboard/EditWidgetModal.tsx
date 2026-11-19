@@ -18,9 +18,11 @@ import { getDashboardWidget } from './DashboardWidgets/registry';
 import type { DashboardWidgetInstance } from '#/lib/dashboard-widgets';
 
 export default function EditWidgetModal({
+    pageId,
     instance,
     onClose,
 }: {
+    pageId: string | null;
     instance: DashboardWidgetInstance | null;
     onClose: () => void;
 }) {
@@ -52,7 +54,7 @@ export default function EditWidgetModal({
                         });
 
                         await queryClient.invalidateQueries({
-                            queryKey: dashboardWidgetsQueryKey,
+                            queryKey: dashboardWidgetsQueryKey(pageId),
                         });
 
                         onClose();

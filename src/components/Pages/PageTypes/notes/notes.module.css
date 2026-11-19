@@ -1,0 +1,32 @@
+.editor {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-height: 0;
+    border: none;
+}
+
+.content {
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+}
+
+.content :global(.ProseMirror) {
+    min-height: 100%;
+    padding: var(--mantine-spacing-xs);
+}
+
+.content :global(.ProseMirror img) {
+    max-width: 100%;
+    height: auto;
+    border-radius: var(--mantine-radius-sm);
+}
+
+.content :global(.ProseMirror img.ProseMirror-selectednode) {
+    outline: 2px solid var(--mantine-primary-color-filled);
+}
+
+.content :global(.ProseMirror:focus) {
+    outline: none;
+}

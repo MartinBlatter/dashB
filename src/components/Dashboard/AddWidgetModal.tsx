@@ -20,9 +20,11 @@ import {
 } from './DashboardWidgets/registry';
 
 export default function AddWidgetModal({
+    pageId,
     opened,
     onClose,
 }: {
+    pageId: string | null;
     opened: boolean;
     onClose: () => void;
 }) {
@@ -70,6 +72,7 @@ export default function AddWidgetModal({
 
                             await createDashboardWidget({
                                 data: {
+                                    pageId,
                                     type: selected.type,
                                     label,
                                     config,
@@ -79,7 +82,7 @@ export default function AddWidgetModal({
                             });
 
                             await queryClient.invalidateQueries({
-                                queryKey: dashboardWidgetsQueryKey,
+                                queryKey: dashboardWidgetsQueryKey(pageId),
                             });
 
                             handleClose();

@@ -17,7 +17,8 @@ export interface WidgetRegistry<TMeta extends WidgetMetaBase, TProps> {
 
 export function createWidgetRegistry<TMeta extends WidgetMetaBase, TProps>(
     namespace: string,
-    modules: Record<string, unknown>
+    modules: Record<string, unknown>,
+    noun = 'widget'
 ): WidgetRegistry<TMeta, TProps> {
     const byType = new Map<string, WidgetDefinition<TMeta, TProps>>();
 
@@ -41,14 +42,14 @@ export function createWidgetRegistry<TMeta extends WidgetMetaBase, TProps>(
 
         if (byType.has(meta.type)) {
             report(
-                `${path} reuses the widget type "${meta.type}"; types must be unique because they are persisted on the widget row.`
+                `${path} reuses the ${noun} type "${meta.type}"; types must be unique because they are persisted on the ${noun} row.`
             );
             continue;
         }
 
         const fields = meta.fields ?? [];
 
-        if (!validateFields(path, fields, report)) continue;
+        if (!validateFields(path, fields, noun, report)) continue;
 
         byType.set(meta.type, { ...meta, fields, Component: module.default });
     }
@@ -99,6 +100,7 @@ function isWidgetModule<TProps>(
 function validateFields(
     path: string,
     fields: ReadonlyArray<WidgetField>,
+    noun: string,
     report: (message: string) => void
 ): boolean {
     const seen = new Set<string>();
@@ -111,7 +113,7 @@ function validateFields(
 
         if (field.name === labelFieldName) {
             report(
-                `${path} declares a field named "${labelFieldName}", which is reserved for the widget's own name.`
+                `${path} declares a field named "${labelFieldName}", which is reserved for the ${noun}'s own name.`
             );
             return false;
         }

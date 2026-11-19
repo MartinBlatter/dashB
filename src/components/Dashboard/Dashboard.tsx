@@ -8,11 +8,13 @@ import {
     dashboardWidgetsQueryKey,
     saveDashboardLayout,
     useDashboardWidgets,
+    useDashboardWidgetsPending,
 } from '#/lib/dashboard-widgets';
 import { m } from '#/paraglide/messages';
 
 import AddWidgetModal from './AddWidgetModal';
-import DashboardGrid from './DashboardGrid';
+import DashboardGrid, { changedPlacements } from './DashboardGrid';
+import DashboardSkeleton from './DashboardSkeleton';
 import { getDashboardWidget } from './DashboardWidgets/registry';
 import DeleteWidgetModal from './DeleteWidgetModal';
 import EditWidgetModal from './EditWidgetModal';
@@ -22,8 +24,13 @@ import type { DashboardGridPlacement } from './DashboardGrid';
 import type { DashboardWidgetInstance } from '#/lib/dashboard-widgets';
 import type { ReactElement } from 'react';
 
-export default function Dashboard(): ReactElement {
-    const widgets = useDashboardWidgets();
+export default function Dashboard({
+    pageId = null,
+}: {
+    pageId?: string | null;
+}): ReactElement {
+    const widgets = useDashboardWidgets(pageId);
+    const pending = useDashboardWidgetsPending(pageId);
     const queryClient = useQueryClient();
     const [adding, setAdding] = useState(false);
     const [editing, setEditing] = useState<string | null>(null);
@@ -35,19 +42,7 @@ export default function Dashboard(): ReactElement {
     });
 
     function handlePlacementChange(placements: Array<DashboardGridPlacement>) {
-        const byId = new Map(widgets.map((widget) => [widget.id, widget]));
-
-        const changed = placements.filter((placement) => {
-            const widget = byId.get(placement.id);
-
-            return (
-                widget !== undefined &&
-                (widget.x !== placement.x ||
-                    widget.y !== placement.y ||
-                    widget.w !== placement.w ||
-                    widget.h !== placement.h)
-            );
-        });
+        const changed = changedPlacements(widgets, placements);
 
         if (changed.length === 0) return;
 
@@ -56,7 +51,7 @@ export default function Dashboard(): ReactElement {
         );
 
         queryClient.setQueryData<Array<DashboardWidgetInstance>>(
-            dashboardWidgetsQueryKey,
+            dashboardWidgetsQueryKey(pageId),
             (current) =>
                 (current ?? []).map((widget) => {
                     const placement = applied.get(widget.id);
@@ -114,8 +109,15 @@ export default function Dashboard(): ReactElement {
         <Stack gap="md">
             <Group justify="space-between" align="flex-start" wrap="nowrap">
                 <Box>
-                    <Title order={2}>{m['dashboard.title']()}</Title>
-                    <Text size="sm" c="dimmed" mt={4}>
+                    {pageId === null ? (
+                        <Title order={2}>{m['dashboard.title']()}</Title>
+                    ) : null}
+
+                    <Text
+                        size="sm"
+                        c="dimmed"
+                        mt={pageId === null ? 4 : undefined}
+                    >
                         {m['dashboard.intro']()}
                     </Text>
                 </Box>
@@ -130,7 +132,9 @@ export default function Dashboard(): ReactElement {
                 </Button>
             </Group>
 
-            {items.length > 0 ? (
+            {pending ? (
+                <DashboardSkeleton />
+            ) : items.length > 0 ? (
                 <DashboardGrid
                     items={items}
                     onPlacementChange={handlePlacementChange}
@@ -141,9 +145,14 @@ export default function Dashboard(): ReactElement {
                 </Text>
             )}
 
-            <AddWidgetModal opened={adding} onClose={() => setAdding(false)} />
+            <AddWidgetModal
+                pageId={pageId}
+                opened={adding}
+                onClose={() => setAdding(false)}
+            />
 
             <EditWidgetModal
+                pageId={pageId}
                 instance={
                     widgets.find((widget) => widget.id === editing) ?? null
                 }
@@ -151,6 +160,7 @@ export default function Dashboard(): ReactElement {
             />
 
             <DeleteWidgetModal
+                pageId={pageId}
                 instance={
                     widgets.find((widget) => widget.id === deleting) ?? null
                 }

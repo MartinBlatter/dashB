@@ -25,6 +25,7 @@ model User {
   headerWidgets HeaderWidget[]
   pages         Page[]
   widgets       DashboardWidget[]
+  notes         Note[]
 
   @@unique([email])
   @@map("user")
@@ -106,6 +107,10 @@ model Page {
   parentId  String?
   parent    Page?    @relation("PageToPage", fields: [parentId], references: [id], onDelete: Cascade)
   children  Page[]   @relation("PageToPage")
+  type      String?
+  config    Json?
+  widgets   DashboardWidget[]
+  notes     Note[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -121,11 +126,16 @@ model Page {
 // not modelled here: a widget declares its own fields in its module and both
 // `config` and `WidgetRecord.data` hold a flat map of scalars keyed by field name,
 // so a new widget type never needs a schema change.
+//
+// `pageId` is the grid the instance belongs to: null is the main dashboard, a page
+// id is that page's own dashboard. Deleting the page deletes its widgets.
 
 model DashboardWidget {
   id        String   @id @default(cuid())
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pageId    String?
+  page      Page?    @relation(fields: [pageId], references: [id], onDelete: Cascade)
   type      String
   label     String
   config    Json
@@ -137,8 +147,32 @@ model DashboardWidget {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@index([userId])
+  @@index([userId, pageId])
   @@map("dashboard_widget")
+}
+
+// --- Notes -------------------------------------------------------------------------
+// One row per note on a notes page. `content` is the editor's HTML, images included as
+// inline data URLs, so a note is self-contained and needs no file storage. x/y/w/h are
+// the same grid units the dashboard uses.
+
+model Note {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pageId    String
+  page      Page     @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  title     String
+  content   String   @default("")
+  x         Int      @default(0)
+  y         Int      @default(0)
+  w         Int      @default(4)
+  h         Int      @default(5)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, pageId])
+  @@map("note")
 }
 
 model WidgetRecord {
