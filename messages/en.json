@@ -19,6 +19,8 @@
         "language_label": "Language",
         "appearance": "Appearance",
         "dark_mode": "Dark mode",
+        "theme_color": "Theme color",
+        "theme_color_reset": "Reset theme color",
         "on": "on",
         "off": "off",
         "add_widget": "Add widget",

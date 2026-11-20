@@ -33,6 +33,8 @@ import Navbar from '#/components/Navbar/Navbar';
 import NavbarMenu from '#/components/Navbar/NavbarMenu';
 import { isPublicPath } from '#/lib/auth-routes';
 import { sessionQueryOptions, useSession } from '#/lib/session';
+import { themeForHue } from '#/lib/theme';
+import { userSettingsQueryOptions, useThemeHue } from '#/lib/user-settings';
 
 interface MyRouterContext {
     queryClient: QueryClient;
@@ -56,6 +58,12 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
                 to: '/login',
                 search: { redirect: location.href },
             });
+        }
+
+        if (user) {
+            await context.queryClient.ensureQueryData(
+                userSettingsQueryOptions()
+            );
         }
 
         return { user };
@@ -96,6 +104,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         useDisclosure(true);
 
     const session = useSession();
+    const theme = themeForHue(useThemeHue());
 
     return (
         <html lang={getLocale()} {...mantineHtmlProps} suppressHydrationWarning>
@@ -104,7 +113,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
                 <HeadContent />
             </head>
             <body>
-                <MantineProvider defaultColorScheme="auto">
+                <MantineProvider theme={theme} defaultColorScheme="auto">
                     {session?.user ? (
                         <AppShell
                             header={{ height: 60 }}

@@ -53,7 +53,8 @@ The `db:*` scripts load `.env.local` through `dotenv-cli`.
 - **Mantine 9** for components and theming, `postcss-preset-mantine` for the
   mixins and breakpoints, **Phosphor** for icons. There is no global
   stylesheet: styling goes through Mantine props, its theme, and CSS modules
-  next to a component when needed.
+  next to a component when needed. The primary color is per-user, see
+  [Theming](#theming).
 - **Prisma 7** with the `better-sqlite3` driver adapter. The client is
   generated into `src/generated/prisma` (gitignored), so run `pnpm db:generate`
   after pulling a schema change.
@@ -127,6 +128,23 @@ Signed-in routes render inside the Mantine `AppShell` (header, navbar, footer);
 `/login` and `/register` render standalone inside
 [AuthCard](src/components/AuthCard/AuthCard.tsx).
 
+### Theming
+
+The Mantine primary color is generated from a single hue the user picks with the
+`HueSlider` in [UserMenu](src/components/Header/UserMenu.tsx).
+[src/lib/theme.ts](src/lib/theme.ts) turns that hue into the ten-shade tuple
+Mantine needs (`themeForHue`), always under the color name `brand`, so
+components keep using `color="brand"` or the default primary color and nothing
+references a fixed hue.
+
+The hue is stored per user in `user_settings.themeHue`, read and written by the
+server functions in
+[src/lib/user-settings.ts](src/lib/user-settings.ts). The root route resolves it
+in `beforeLoad`, so the server already renders the right CSS variables and the
+colors do not flash on load. Dragging the slider writes the previewed hue
+straight into the query cache — the whole app re-themes live — and releasing it
+persists the value.
+
 ### Forms
 
 [src/components/Form/Form.ts](src/components/Form/Form.ts) exports `useAppForm`,
@@ -164,8 +182,9 @@ import { m } from '#/paraglide/messages';
 <Button>{m['header.add_widget']()}</Button>;
 ```
 
-Locale lives in the URL (`/de/...`), switched by
-[LocaleSwitcher](src/components/Header/LocaleSwitcher.tsx).
+Locale lives in the URL (`/de/...`), switched from
+[UserMenu](src/components/Header/UserMenu.tsx) alongside the color scheme and
+the theme color.
 
 ## Deployment
 

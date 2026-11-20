@@ -19,6 +19,8 @@
         "language_label": "Sprache",
         "appearance": "Darstellung",
         "dark_mode": "Dunkelmodus",
+        "theme_color": "Akzentfarbe",
+        "theme_color_reset": "Akzentfarbe zurücksetzen",
         "on": "ein",
         "off": "aus",
         "add_widget": "Widget hinzufügen",

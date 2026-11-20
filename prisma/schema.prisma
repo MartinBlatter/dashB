@@ -22,6 +22,7 @@ model User {
   updatedAt     DateTime
   sessions      Session[]
   accounts      Account[]
+  settings      UserSettings?
   headerWidgets HeaderWidget[]
   pages         Page[]
   widgets       DashboardWidget[]
@@ -75,6 +76,23 @@ model Verification {
   updatedAt  DateTime
 
   @@map("verification")
+}
+
+
+// --- User Settings ----------------------------------------------------------------
+// Per-user preferences kept out of the better-auth user row: one row per user,
+// created on first write. `themeHue` is the hue (0-359) the Mantine primary color is
+// generated from, null meaning the app default.
+
+model UserSettings {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  themeHue  Int?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("user_settings")
 }
 
 

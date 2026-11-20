@@ -9,6 +9,8 @@ import {
     TrashIcon,
 } from '@phosphor-icons/react';
 
+import { brandColor } from '#/lib/theme';
+
 import { dueLabel, repeatLabel, t } from './tasks';
 
 import type { Task } from './tasks';
@@ -72,7 +74,7 @@ export default function TaskRow({
                     </Text>
 
                     {task.timesRequired > 1 ? (
-                        <Badge size="xs" variant="light" color="blue">
+                        <Badge size="xs" variant="light" color={brandColor}>
                             {task.timesDone}/{task.timesRequired}
                         </Badge>
                     ) : null}

@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import {
+    ActionIcon,
     Group,
+    HueSlider,
     Menu,
     Switch,
     Text,
@@ -9,6 +11,7 @@ import {
     useMantineColorScheme,
 } from '@mantine/core';
 import {
+    ArrowCounterClockwiseIcon,
     CaretDownIcon,
     CheckIcon,
     MoonIcon,
@@ -21,6 +24,12 @@ import { m } from '#/paraglide/messages';
 import { getLocale, locales, setLocale } from '#/paraglide/runtime';
 import { authClient } from '#/lib/auth-client';
 import { sessionQueryKey, useSession } from '#/lib/session';
+import { clampHue, defaultThemeHue } from '#/lib/theme';
+import {
+    setThemeHue,
+    userSettingsQueryKey,
+    useThemeHue,
+} from '#/lib/user-settings';
 
 import type { Locale } from '#/components/Widgets/i18n';
 
@@ -45,6 +54,7 @@ export default function UserMenu() {
     const computedColorScheme = useComputedColorScheme('light', {
         getInitialValueInEffect: true,
     });
+    const themeHue = useThemeHue();
 
     const user = session?.user;
 
@@ -54,6 +64,20 @@ export default function UserMenu() {
 
     const dark = computedColorScheme === 'dark';
     const currentLocale = getLocale();
+
+    const previewHue = (hue: number) => {
+        queryClient.setQueryData(userSettingsQueryKey, {
+            themeHue: clampHue(hue),
+        });
+    };
+
+    const saveHue = async (hue: number) => {
+        previewHue(hue);
+
+        const next = await setThemeHue({ data: { themeHue: clampHue(hue) } });
+
+        queryClient.setQueryData(userSettingsQueryKey, next);
+    };
 
     const signOut = async () => {
         setSigningOut(true);
@@ -107,6 +131,27 @@ export default function UserMenu() {
                 >
                     {m['header.dark_mode']()}
                 </Menu.Item>
+
+                <Menu.Label>{m['header.theme_color']()}</Menu.Label>
+                <Group gap="xs" px="sm" pb={6} wrap="nowrap">
+                    <HueSlider
+                        flex={1}
+                        size="md"
+                        aria-label={m['header.theme_color']()}
+                        value={themeHue}
+                        onChange={previewHue}
+                        onChangeEnd={(hue) => void saveHue(hue)}
+                    />
+                    <ActionIcon
+                        variant="subtle"
+                        color="gray"
+                        size="md"
+                        aria-label={m['header.theme_color_reset']()}
+                        onClick={() => void saveHue(defaultThemeHue)}
+                    >
+                        <ArrowCounterClockwiseIcon size={16} />
+                    </ActionIcon>
+                </Group>
 
                 <Menu.Label>{m['header.language_label']()}</Menu.Label>
                 {locales.map((locale) => {

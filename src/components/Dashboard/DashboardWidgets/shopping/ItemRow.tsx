@@ -13,6 +13,8 @@ import {
     TrashIcon,
 } from '@phosphor-icons/react';
 
+import { brandColor } from '#/lib/theme';
+
 import { quantityLabel, t } from './shopping';
 
 import type { ShoppingItem } from './shopping';
@@ -56,7 +58,7 @@ export default function ItemRow({
                         <Badge
                             size="xs"
                             variant="light"
-                            color={checked ? 'gray' : 'blue'}
+                            color={checked ? 'gray' : brandColor}
                         >
                             {quantity}
                         </Badge>

@@ -105,7 +105,8 @@ export default function NoteCard({
                 wrap="nowrap"
                 px="xs"
                 py={6}
-                bg="var(--mantine-color-blue-filled)"
+                bg="var(--mantine-primary-color-filled)"
+                c="var(--mantine-primary-color-contrast)"
                 className={dragHandleClass}
                 style={{
                     cursor: 'grab',
@@ -121,7 +122,13 @@ export default function NoteCard({
                     variant="unstyled"
                     size="xs"
                     style={{ flex: 1 }}
-                    styles={{ input: { fontWeight: 500, minHeight: 0 } }}
+                    styles={{
+                        input: {
+                            fontWeight: 500,
+                            minHeight: 0,
+                            color: 'var(--mantine-primary-color-contrast)',
+                        },
+                    }}
                     aria-label={t('title_label')}
                     placeholder={t('title_placeholder')}
                     value={title}

@@ -13,6 +13,8 @@ import {
     TrashIcon,
 } from '@phosphor-icons/react';
 
+import { brandColor } from '#/lib/theme';
+
 import { initialOf, t } from './bookmarks';
 
 import type { Bookmark } from './bookmarks';
@@ -30,7 +32,7 @@ export default function BookmarkRow({
 }) {
     return (
         <Group gap="xs" wrap="nowrap">
-            <Avatar size={26} radius="sm" color="blue">
+            <Avatar size={26} radius="sm" color={brandColor}>
                 <Text size="xs" fw={600}>
                     {initialOf(bookmark.title, bookmark.host)}
                 </Text>

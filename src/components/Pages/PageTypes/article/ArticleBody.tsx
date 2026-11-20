@@ -174,11 +174,7 @@ export default function ArticleBody({
                         </Group>
                     </Group>
 
-                    <Paper
-                        withBorder
-                        radius="md"
-                        style={{ overflow: 'hidden' }}
-                    >
+                    <Paper withBorder radius="md" style={{ overflow: 'clip' }}>
                         {markdownMode ? (
                             <Textarea
                                 variant="unstyled"

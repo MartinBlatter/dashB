@@ -89,7 +89,7 @@ export default function CalendarsPanel({
                             >
                                 <ColorSwatch
                                     size={12}
-                                    color={`var(--mantine-color--6)`}
+                                    color={`var(--mantine-color-${calendar.color}-6)`}
                                 />
 
                                 <Text

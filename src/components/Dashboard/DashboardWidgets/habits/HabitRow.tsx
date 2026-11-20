@@ -14,6 +14,7 @@ import {
 } from '@phosphor-icons/react';
 
 import CellStrip from '#/components/Widgets/CellStrip';
+import { brandColor } from '#/lib/theme';
 
 import { t } from './habits';
 
@@ -82,7 +83,7 @@ export default function HabitRow({
                     <Badge
                         size="sm"
                         variant="light"
-                        color={checkedToday ? 'blue' : 'gray'}
+                        color={checkedToday ? brandColor : 'gray'}
                         title={`${t('best')} ${best}${t('days')}`}
                     >
                         {`${streak}${t('days')}`}

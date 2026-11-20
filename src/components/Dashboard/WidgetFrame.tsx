@@ -40,7 +40,8 @@ export default function WidgetFrame({
                 wrap="nowrap"
                 px="xs"
                 py={6}
-                bg="var(--mantine-color-blue-filled)"
+                bg="var(--mantine-primary-color-filled)"
+                c="var(--mantine-primary-color-contrast)"
                 className={dragHandleClass}
                 style={{
                     cursor: 'grab',
