@@ -30,6 +30,7 @@ model User {
   articles      Article[]
   tableColumns  TableColumn[]
   tableEntries  TableEntry[]
+  documents     Document[]
 
   @@unique([email])
   @@map("user")
@@ -135,6 +136,7 @@ model Page {
   article   Article?
   tableColumns TableColumn[]
   tableEntries TableEntry[]
+  documents Document[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -273,4 +275,35 @@ model TableEntry {
 
   @@index([userId, pageId, position])
   @@map("table_entry")
+}
+
+// --- Document pages ----------------------------------------------------------------
+// One row per node of a documents page's tree, folders and files alike, told apart by
+// `kind`. `parentId` nests a node inside a folder and is null at the page's root;
+// `pageId` is carried on every node, nested ones included, so one indexed query loads
+// a whole tree. Both foreign keys cascade, so deleting a folder deletes its subtree.
+//
+// A file's bytes live in `content` as a BLOB and are never part of a tree query: only
+// the download route selects that column. There is no `position` — the tree is sorted
+// folders-first by name, the way a file manager does it.
+
+model Document {
+  id        String     @id @default(cuid())
+  userId    String
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pageId    String
+  page      Page       @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  parentId  String?
+  parent    Document?  @relation("DocumentToDocument", fields: [parentId], references: [id], onDelete: Cascade)
+  children  Document[] @relation("DocumentToDocument")
+  kind      String
+  name      String
+  mimeType  String?
+  size      Int        @default(0)
+  content   Bytes?
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@index([userId, pageId, parentId])
+  @@map("document")
 }

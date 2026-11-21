@@ -68,6 +68,7 @@ The `db:*` scripts load `.env.local` through `dotenv-cli`.
 src/
   routes/            file-based routes (__root.tsx holds the app shell)
     api/auth/$.ts    Better Auth request handler
+    api/documents/   upload and download of a documents page's files
   components/        one folder per component
     Form/            Mantine inputs bound to TanStack Form
   lib/               auth, session and shared helpers

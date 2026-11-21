@@ -245,7 +245,7 @@ foreign-keyed to `dashboard_widget`, so it cannot hold rows for a page.
 A page type that needs to persist more than its `config` needs a schema change
 first. Keep settings in `fields` until then.
 
-Four page types have already needed one, and all four scope their rows the
+Five page types have already needed one, and all five scope their rows the
 same way:
 
 - `dashboard_widget.pageId` is **nullable** — a `null` row belongs to the main
@@ -257,6 +257,9 @@ same way:
 - `table_column.pageId` and `table_entry.pageId` are **required**, with many
   rows of each per page. The table page type keeps the user's own column
   definitions in one and the entries in the other.
+- `document.pageId` is **required** and carried on every node of the tree, the
+  nested ones included, so one indexed query loads a whole page's tree; the
+  nesting itself is a second, self-referencing `parentId`.
 
 Either way the column carries `onDelete: Cascade`, so a page's rows go with it,
 and the handler checks the page belongs to the caller before writing. Scope a
@@ -372,6 +375,117 @@ function runs on the server and in the browser and the two agree.
 externally changed text into it — here, Markdown typed in the other tab — bump a
 counter and pass it as `key` rather than reaching for `setContent`.
 
+## A tree of rows
+
+The documents page type stores one row per node, folders and files alike, told
+apart by a `kind` column, and nests them with a self-referencing `parentId` that
+is null at the page's root. Both foreign keys cascade, so deleting a folder — or
+the page — takes its whole subtree with it and no orphan rows are possible.
+
+It has **no `position` column**. The tree sorts folders before files and then by
+name, the way a file manager does, so there is no order to persist and dragging a
+node only ever changes its `parentId`. Reach for a `position` only when the user
+genuinely needs to arrange rows by hand.
+
+A self-referencing table needs two checks a flat one does not, both in
+[src/lib/page-documents.ts](../src/lib/page-documents.ts):
+
+- a node may not move into its own subtree — `isDescendant` walks the parent map
+  rather than issuing recursive queries, and the same function runs in the
+  browser so the drag's drop indicator agrees with the server;
+- names are unique **per folder**, not per page, so the check is scoped to
+  `parentId`.
+
+The uniqueness check runs on the client too, against the tree already in the
+query cache, and that is what produces the "already exists" message. The server
+re-checks and throws, but a thrown handler message is not worth plumbing to the
+UI — do the check twice instead.
+
+## Files a user uploads
+
+Notes and articles keep images as inline data URLs, which is self-contained but
+only works because those images are small and already in the HTML. Real uploads
+are different, and the documents page type is the pattern for them.
+
+**Bytes go in a `Bytes` column, never base64.** `document.content` is a BLOB and
+`document.size` is the byte count. The tree query uses an explicit `select` that
+leaves `content` out, so listing a page never reads a single file body.
+
+**Uploads and downloads are a route, not a server function.** Server functions
+serialize their payload, so a 25 MB file would travel as a ~34 MB JSON string.
+[src/routes/api/documents/$.ts](../src/routes/api/documents/$.ts) is a splat
+route whose `server.handlers` hand the request to
+[src/lib/document-files.ts](../src/lib/document-files.ts):
+
+| Request                            | What it does                                          |
+| ---------------------------------- | ----------------------------------------------------- |
+| `POST /api/documents/upload`       | `multipart/form-data`, read with `request.formData()` |
+| `GET /api/documents/<id>`          | serves the file inline, for a preview                 |
+| `GET /api/documents/<id>/download` | serves it as an attachment                            |
+
+That split is why `document-files.ts` is its own module. A route's `server`
+block is stripped from the client bundle, so the route may import Prisma; a
+plain exported function in a module that client code also imports may **not**,
+because only server function handler bodies are removed. Keep request handlers
+out of the feature's lib module.
+
+**Serving user files inline is an XSS vector.** A file served from the app's own
+origin with its own content type can run script in that origin and reach the
+session cookie, so `documentPreviewKind` is an allowlist — raster images, PDF,
+plain text, audio, video — and it decides both what the preview renders and what
+the route is willing to serve inline. Everything else, uploaded HTML and SVG
+included, is served as `application/octet-stream` with
+`Content-Disposition: attachment`, and every response carries
+`X-Content-Type-Options: nosniff`. The uploaded `mimeType` is normalised to a
+bare `type/subtype` before it is stored, so a crafted header cannot smuggle
+parameters back out through the `Content-Type`.
+
+### A server route cannot be an `<img src>`
+
+This one costs an afternoon if you meet it cold. Point an `<img>` at a server
+route and you get a **404 with an HTML body** — a broken-image icon — while the
+exact same URL returns the file perfectly from `curl`, `fetch` or the address
+bar.
+
+The cause is Nitro's asset-first dispatch, in dev
+(`nitro/dist/_build/vite.dev.mjs`) and in the built server alike:
+
+```js
+const isAsset =
+    typeof fetchDest === 'string' && fetchDest !== 'empty'
+        ? !/^(?:document|iframe|frame)$/.test(fetchDest)
+        : isAssetByExt;
+if (isAsset) req._nitroHandled = true; // → static serving, never your handler
+```
+
+TanStack Start registers one catch-all `/**` with Nitro rather than a route per
+file, so Nitro falls back to guessing from the request's `Sec-Fetch-Dest`
+header. Anything that is not `document`, `iframe` or `frame` is assumed to be a
+static file:
+
+| Element                       | `Sec-Fetch-Dest` | Reaches a server route |
+| ----------------------------- | ---------------- | ---------------------- |
+| `<img>`, `<video>`, `<audio>` | `image` etc.     | **no — 404**           |
+| `fetch()`                     | `empty`          | yes                    |
+| `<iframe>`                    | `iframe`         | yes                    |
+| link, download, new tab       | `document`       | yes                    |
+
+So media cannot be pointed straight at the route, and
+[useDocumentFile.ts](../src/components/Pages/PageTypes/documents/useDocumentFile.ts)
+`fetch`es the bytes — `Sec-Fetch-Dest: empty`, which is allowed — and hands the
+element an object URL instead, revoking it on cleanup. The iframe previews and
+both download buttons keep the real URL, because their dest is on the allowed
+list.
+
+The payoff of knowing which column a dest falls in: do **not** reach for a blob
+when a plain URL already works, and never debug this by changing the path. No
+URL shape helps, because for `dest: image` the extension check is not even
+consulted.
+
+**Clashing names get a suffix, they don't fail.** `uniqueDocumentName` turns a
+second `report.pdf` into `report (2).pdf`, inserting before the extension. An
+upload the user did not name is not the place for an error.
+
 ## Server rendering
 
 Pages are server-rendered for signed-in users, so your component renders on the
@@ -396,6 +510,7 @@ server first. The same rules as widgets apply:
 | `fromStoredValues`, `toStoredValues`    | `#/components/Widgets/values`      | Convert between stored and form shapes for a field list |
 | `FieldsForm`                            | `#/components/Widgets/FieldsForm`  | A validated form for any field list                     |
 | `toInlineImageUrl`                      | `#/components/Widgets/inlineImage` | Downscale a picked image to a data URL you can store    |
+| `useDocuments(pageId)`                  | `#/lib/page-documents`             | A page's document tree, with create/rename/move/upload  |
 
 ## What happens automatically
 
