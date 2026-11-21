@@ -31,6 +31,7 @@ model User {
   tableColumns  TableColumn[]
   tableEntries  TableEntry[]
   documents     Document[]
+  pageRecords   PageRecord[]
 
   @@unique([email])
   @@map("user")
@@ -137,6 +138,7 @@ model Page {
   tableColumns TableColumn[]
   tableEntries TableEntry[]
   documents Document[]
+  pageRecords PageRecord[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -306,4 +308,33 @@ model Document {
 
   @@index([userId, pageId, parentId])
   @@map("document")
+}
+
+// --- Page records -------------------------------------------------------------------
+// The generic per-page row store, the counterpart of `widget_record`: a page type that
+// needs rows of its own uses this instead of adding a table, so a new page type never
+// needs a schema change. `collection` separates the row sets one page type owns (a
+// kanban page keeps its lanes and its cards in two), and `data` is the same flat map of
+// scalars a widget record holds, keyed by field name.
+//
+// `position` carries a user-arranged order and `sortKey` a derived one; neither is
+// unique, so a reorder writes every row once in a transaction. Rows are scoped by page
+// and cascade with it.
+
+model PageRecord {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pageId     String
+  page       Page     @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  collection String   @default("default")
+  position   Int      @default(0)
+  sortKey    String?
+  data       Json
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([userId, pageId, collection, position])
+  @@index([userId, pageId, collection, sortKey])
+  @@map("page_record")
 }

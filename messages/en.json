@@ -96,6 +96,7 @@
         "no_type_title": "This page has no type yet",
         "no_type_hint": "A page type decides what this page shows. Pick one to get started.",
         "set_type": "Set page type",
+        "settings": "Page settings",
         "set_type_submit": "Save",
         "type": "Page type",
         "type_placeholder": "Pick a page type",

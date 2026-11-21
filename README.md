@@ -107,6 +107,11 @@ is decided by the page's **type**. Page types are added the same way as widgets
 - [docs/PageTypes.md](docs/PageTypes.md) — the page template, the type registry
   and how to write a type.
 
+A page type that needs rows of its own uses the generic `page_record` table
+through `usePageRecords` in [src/lib/page-records.ts](src/lib/page-records.ts),
+the per-page counterpart of `widget_record`, so it needs no schema change
+either.
+
 ### Routes
 
 Adding a file under [src/routes/](src/routes/) adds a route;

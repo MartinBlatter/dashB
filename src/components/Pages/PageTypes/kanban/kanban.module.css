@@ -1,0 +1,65 @@
+.board {
+    display: flex;
+    gap: var(--mantine-spacing-md);
+    align-items: flex-start;
+    overflow-x: auto;
+    padding-bottom: var(--mantine-spacing-xs);
+}
+
+.lane {
+    display: flex;
+    flex-direction: column;
+    flex: 0 0 280px;
+    max-height: 70vh;
+    border-radius: var(--mantine-radius-md);
+    border: 1px solid var(--mantine-color-default-border);
+    background-color: var(--mantine-color-default);
+}
+
+.laneOver {
+    border-color: var(--mantine-primary-color-filled);
+}
+
+.laneHeader {
+    display: flex;
+    align-items: center;
+    gap: var(--mantine-spacing-xs);
+    padding: var(--mantine-spacing-xs) var(--mantine-spacing-sm);
+    border-bottom: 1px solid var(--mantine-color-default-border);
+}
+
+.laneAccent {
+    width: 4px;
+    align-self: stretch;
+    border-radius: 2px;
+    min-height: 18px;
+}
+
+.laneBody {
+    display: flex;
+    flex-direction: column;
+    gap: var(--mantine-spacing-xs);
+    padding: var(--mantine-spacing-xs);
+    overflow-y: auto;
+    min-height: 72px;
+}
+
+.card {
+    border-left: 3px solid var(--mantine-color-gray-6);
+    cursor: grab;
+    touch-action: none;
+}
+
+.card:focus-visible {
+    outline: 2px solid var(--mantine-primary-color-filled);
+    outline-offset: 2px;
+}
+
+.cardDragging {
+    cursor: grabbing;
+}
+
+.notes {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}

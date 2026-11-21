@@ -239,14 +239,42 @@ the URL, is the thing to key stored data on.
 
 ## Storing data
 
-There is **no generic per-page record store**. The `widget_record` table is
-foreign-keyed to `dashboard_widget`, so it cannot hold rows for a page.
+Settings go in `fields`. **Rows go in `page_record`**, the generic per-page row
+store — so a page type that needs rows of its own normally needs no schema
+change at all.
 
-A page type that needs to persist more than its `config` needs a schema change
-first. Keep settings in `fields` until then.
+It is the counterpart of `widget_record`, which is foreign-keyed to
+`dashboard_widget` and so cannot hold rows for a page. `usePageRecords` from
+[src/lib/page-records.ts](../src/lib/page-records.ts) is the same surface
+`useWidgetRecords` gives a widget, which is what keeps a widget and a page type
+copy-pasteable into each other:
 
-Five page types have already needed one, and all five scope their rows the
-same way:
+```ts
+const laneStore = usePageRecords(pageId, 'kanban-lane');
+const cardStore = usePageRecords(pageId, 'kanban-card');
+
+await cardStore.create({ data: { laneId, title, notes } });
+await cardStore.update({ id, data: { ...card, laneId: target } });
+await cardStore.reorder(orderedIds);
+```
+
+Three things to know about it:
+
+- **`collection` separates the row sets one page type owns.** The kanban page
+  type keeps its lanes in one and its cards in the other; each is its own query
+  key, so one does not invalidate the other. Pick a prefixed name
+  (`kanban-card`, not `card`) — the column is not namespaced by page type.
+- **`data` is the flat map of scalars a widget record holds**, so `FieldsForm`,
+  `fromStoredValues` and `toStoredValues` work on it unchanged. It is opaque to
+  the database: a foreign key inside `data` (a card's `laneId`) is **not**
+  enforced and **does not cascade**, so decode defensively — `groupCards` drops
+  a card into the first lane rather than losing it — and delete dependent rows
+  yourself, as deleting a lane does.
+- `position` carries a user-arranged order, `sortKey` a derived one (a date, for
+  instance). Pass `'sortKey'` as the third argument to order by it.
+
+A **dedicated table** is the exception, for a shape `data` cannot express. Five
+page types needed one, and all five scope their rows the same way:
 
 - `dashboard_widget.pageId` is **nullable** — a `null` row belongs to the main
   dashboard, a row with a page id to that page's own grid.
@@ -260,6 +288,11 @@ same way:
 - `document.pageId` is **required** and carried on every node of the tree, the
   nested ones included, so one indexed query loads a whole page's tree; the
   nesting itself is a second, self-referencing `parentId`.
+
+What earns a table: a column the database has to understand. `document` needs a
+`Bytes` BLOB a tree query can exclude and a real self-referencing `parentId`
+that cascades; `table_column` needs rows other rows are keyed by. A flat set of
+records does not.
 
 Either way the column carries `onDelete: Cascade`, so a page's rows go with it,
 and the handler checks the page belongs to the caller before writing. Scope a
@@ -286,9 +319,17 @@ await prisma.$transaction(
 );
 ```
 
-`header_widget` already does it this way. Read with
+`header_widget` already does it this way, and so does `page_record` —
+`reorder(ids)` on the store is that transaction. Read with
 `orderBy: [{ position: 'asc' }, { createdAt: 'asc' }]` so that rows which somehow
 share a position still come back in a stable order.
+
+One wrinkle when a collection holds several lists, as a board's cards do:
+positions are unique to neither the lane nor the collection, so pass
+`reorder` the **whole** collection in its new order, lane after lane, rather
+than one lane's ids. Order within a group is what the UI reads, but keeping the
+numbering global means a card that moves between lanes cannot land on a tie it
+has to be sorted out of.
 
 ### Rows whose shape the user decides
 
@@ -511,6 +552,7 @@ server first. The same rules as widgets apply:
 | `FieldsForm`                            | `#/components/Widgets/FieldsForm`  | A validated form for any field list                     |
 | `toInlineImageUrl`                      | `#/components/Widgets/inlineImage` | Downscale a picked image to a data URL you can store    |
 | `useDocuments(pageId)`                  | `#/lib/page-documents`             | A page's document tree, with create/rename/move/upload  |
+| `usePageRecords(pageId, collection)`    | `#/lib/page-records`               | Rows of your own on a page, with no schema change       |
 
 ## What happens automatically
 
@@ -549,5 +591,5 @@ restoring the file restores the page.
 | `defaultSize`       | yes, grid units                      | no, a page fills the main area  |
 | Field named `label` | reserved                             | reserved                        |
 | Instance name       | the user types one                   | the page's own `title`          |
-| Row storage         | `widget_record`                      | its own table, keyed by page    |
+| Row storage         | `widget_record`                      | `page_record`, keyed by page    |
 | Instances per type  | many                                 | one per page                    |

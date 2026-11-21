@@ -96,6 +96,7 @@
         "no_type_title": "Diese Seite hat noch keinen Typ",
         "no_type_hint": "Der Seitentyp bestimmt, was diese Seite anzeigt. Wähle einen aus, um zu beginnen.",
         "set_type": "Seitentyp festlegen",
+        "settings": "Seiteneinstellungen",
         "set_type_submit": "Speichern",
         "type": "Seitentyp",
         "type_placeholder": "Seitentyp wählen",

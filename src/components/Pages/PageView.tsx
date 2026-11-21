@@ -1,6 +1,14 @@
 import { useState } from 'react';
-import { Alert, Button, Stack, Text } from '@mantine/core';
-import { PlusIcon, WarningIcon } from '@phosphor-icons/react';
+import {
+    ActionIcon,
+    Alert,
+    Button,
+    Group,
+    Stack,
+    Text,
+    Tooltip,
+} from '@mantine/core';
+import { GearSixIcon, PlusIcon, WarningIcon } from '@phosphor-icons/react';
 
 import { fromStoredValues } from '#/components/Widgets/values';
 import { resolvePagePath, usePageList, usePagesPending } from '#/lib/pages';
@@ -42,7 +50,22 @@ export default function PageView({
 
     return (
         <Stack gap="md">
-            <PageBreadcrumbs pages={pages} page={page} />
+            <Group justify="space-between" align="center" wrap="nowrap">
+                <PageBreadcrumbs pages={pages} page={page} />
+
+                {page.type === null ? null : (
+                    <Tooltip label={m['page.settings']()} withinPortal>
+                        <ActionIcon
+                            variant="subtle"
+                            color="gray"
+                            aria-label={m['page.settings']()}
+                            onClick={() => setSettingType(true)}
+                        >
+                            <GearSixIcon size={18} />
+                        </ActionIcon>
+                    </Tooltip>
+                )}
+            </Group>
 
             {page.type === null ? (
                 <Alert variant="light" title={m['page.no_type_title']()}>
