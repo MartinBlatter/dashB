@@ -28,6 +28,8 @@ model User {
   widgets       DashboardWidget[]
   notes         Note[]
   articles      Article[]
+  tableColumns  TableColumn[]
+  tableEntries  TableEntry[]
 
   @@unique([email])
   @@map("user")
@@ -131,6 +133,8 @@ model Page {
   widgets   DashboardWidget[]
   notes     Note[]
   article   Article?
+  tableColumns TableColumn[]
+  tableEntries TableEntry[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -228,4 +232,45 @@ model WidgetRecord {
   @@index([widgetId, collection, sortKey])
   @@index([widgetId, collection, position])
   @@map("widget_record")
+}
+// --- Table pages -------------------------------------------------------------------
+// A table page's columns are user data, not code: the user adds them at runtime and
+// each one declares a field kind the shared widget field system already renders. One
+// row per column, one row per entry, both scoped to the page and deleted with it.
+//
+// `TableEntry.data` is a flat map of scalars keyed by **column id**, so renaming a
+// column keeps its values. `position` carries the user's order and has no unique
+// constraint: reordering writes every row once in a transaction.
+
+model TableColumn {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pageId    String
+  page      Page     @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  label     String
+  kind      String
+  position  Int      @default(0)
+  required  Boolean  @default(false)
+  options   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, pageId, position])
+  @@map("table_column")
+}
+
+model TableEntry {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pageId    String
+  page      Page     @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  position  Int      @default(0)
+  data      Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, pageId, position])
+  @@map("table_entry")
 }

@@ -245,7 +245,7 @@ foreign-keyed to `dashboard_widget`, so it cannot hold rows for a page.
 A page type that needs to persist more than its `config` needs a schema change
 first. Keep settings in `fields` until then.
 
-Three page types have already needed one, and all three scope their rows the
+Four page types have already needed one, and all four scope their rows the
 same way:
 
 - `dashboard_widget.pageId` is **nullable** — a `null` row belongs to the main
@@ -254,10 +254,66 @@ same way:
 - `article.pageId` is **required and unique**, because a page has at most one
   article. The handler `upsert`s on it, so the row appears on the first save
   rather than when the type is set.
+- `table_column.pageId` and `table_entry.pageId` are **required**, with many
+  rows of each per page. The table page type keeps the user's own column
+  definitions in one and the entries in the other.
 
 Either way the column carries `onDelete: Cascade`, so a page's rows go with it,
 and the handler checks the page belongs to the caller before writing. Scope a
 new table the same way rather than inventing a second ownership model.
+
+### Ordering rows the user can rearrange
+
+Both table tables carry a plain `position Int` and **no unique constraint on
+it**. That is deliberate. `page` does have `@@unique([parentId, position])`, and
+the price is the `stagedPosition` / `stagingOffset` / two-pass `applyOrder()`
+machinery in [src/lib/pages.ts](../src/lib/pages.ts) — forty lines whose only
+job is to dodge the constraint, because swapping two rows transiently collides.
+
+Without the constraint, a reorder is one pass:
+
+```ts
+await prisma.$transaction(
+    data.ids.map((id, index) =>
+        prisma.tableEntry.updateMany({
+            where: { id, userId, pageId: data.pageId },
+            data: { position: index },
+        })
+    )
+);
+```
+
+`header_widget` already does it this way. Read with
+`orderBy: [{ position: 'asc' }, { createdAt: 'asc' }]` so that rows which somehow
+share a position still come back in a stable order.
+
+### Rows whose shape the user decides
+
+The table page type is the one that does not know its own fields at build time:
+the user adds the columns. It stores each column as a row declaring a field
+`kind`, and `table_entry.data` is the same flat map of scalars a widget record
+uses — keyed by **column id**, so renaming a column keeps its values.
+
+The payoff is that the shared field system does the rest. One function turns a
+stored column into a `WidgetField`, and `FieldsForm` then generates the
+add-entry form, its inputs and its validation with no form code at all:
+
+```ts
+export function fieldFromColumn(column: TableColumn): WidgetField {
+    return {
+        kind: column.kind,
+        name: column.id,
+        label: () => column.label,
+        required: column.required,
+    };
+}
+```
+
+Reach for this shape when the user, not the developer, decides what a row holds.
+See [table/columns.ts](../src/components/Pages/PageTypes/table/columns.ts), and
+note that the registry's build-time field validation does **not** cover fields
+built this way — `sanitizeEntryData` in the same file is what keeps a stale
+stored value from reaching the form.
 
 ## Reusing the dashboard
 
