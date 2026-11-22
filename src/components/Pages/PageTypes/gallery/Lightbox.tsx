@@ -18,9 +18,8 @@ import {
     TrashIcon,
 } from '@phosphor-icons/react';
 
-import { documentDownloadUrl } from '#/lib/page-documents';
+import { documentDownloadUrl, useDocumentFile } from '#/lib/page-documents';
 
-import { useDocumentFile } from '../documents/useDocumentFile';
 import { t } from './i18n';
 
 import classes from './gallery.module.css';

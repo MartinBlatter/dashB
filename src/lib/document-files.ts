@@ -35,7 +35,7 @@ export async function handleDocumentRequest(
         return plain(404, 'Not found');
     }
 
-    return serveDocument(userId, id, tail === 'download');
+    return serveDocument(request, userId, id, tail === 'download');
 }
 
 function requestSegments(request: Request): Array<string> {
@@ -51,30 +51,39 @@ function requestSegments(request: Request): Array<string> {
 }
 
 async function serveDocument(
+    request: Request,
     userId: string,
     id: string,
     download: boolean
 ): Promise<Response> {
     const row = await prisma.document.findFirst({
         where: { id, userId, kind: 'file' },
-        select: { name: true, mimeType: true, content: true },
+        select: { name: true, mimeType: true, content: true, updatedAt: true },
     });
 
     if (!row || row.content === null) return plain(404, 'Not found');
 
     const mimeType = normalizeMimeType(row.mimeType);
     const inline = !download && documentPreviewKind(mimeType) !== null;
+    const etag = `"${row.updatedAt.getTime().toString(36)}-${row.content.byteLength.toString(36)}"`;
+
+    const headers: Record<string, string> = {
+        'content-type': inline ? inlineContentType(mimeType) : fallbackMimeType,
+        'content-disposition': `${inline ? 'inline' : 'attachment'}; filename*=UTF-8''${encodeURIComponent(row.name)}`,
+        'cache-control': 'private, no-cache, must-revalidate',
+        'x-content-type-options': 'nosniff',
+        etag,
+    };
+
+    if (request.headers.get('if-none-match') === etag) {
+        return new Response(null, { status: 304, headers });
+    }
 
     return new Response(row.content, {
         status: 200,
         headers: {
-            'content-type': inline
-                ? inlineContentType(mimeType)
-                : fallbackMimeType,
+            ...headers,
             'content-length': String(row.content.byteLength),
-            'content-disposition': `${inline ? 'inline' : 'attachment'}; filename*=UTF-8''${encodeURIComponent(row.name)}`,
-            'cache-control': 'private, no-cache, must-revalidate',
-            'x-content-type-options': 'nosniff',
         },
     });
 }

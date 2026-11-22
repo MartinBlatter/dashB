@@ -85,16 +85,25 @@ model Verification {
 
 // --- User Settings ----------------------------------------------------------------
 // Per-user preferences kept out of the better-auth user row: one row per user,
-// created on first write. `themeHue` is the hue (0-359) the Mantine primary color is
-// generated from, null meaning the app default.
+// created on first write. Every preference is nullable and null means the app default.
+//
+// `themeHue` is the hue (0-359) the Mantine primary color is generated from.
+// `surfaceOpacity` is the percent opacity of the app's surfaces - the shell, every
+// Paper and every Card - so anything under 100 is the semi-transparent mode.
+// `backgroundImageId` points at one of the user's own uploaded image files, shown
+// behind those surfaces; the `SetNull` is what clears the preference when that file
+// is deleted on its documents or gallery page, so no dangling id can be served.
 
 model UserSettings {
-  id        String   @id @default(cuid())
-  userId    String   @unique
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  themeHue  Int?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                String    @id @default(cuid())
+  userId            String    @unique
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  themeHue          Int?
+  surfaceOpacity    Int?
+  backgroundImageId String?
+  backgroundImage   Document? @relation(fields: [backgroundImageId], references: [id], onDelete: SetNull)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 
   @@map("user_settings")
 }
@@ -303,6 +312,7 @@ model Document {
   mimeType  String?
   size      Int        @default(0)
   content   Bytes?
+  backgroundFor UserSettings[]
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
 

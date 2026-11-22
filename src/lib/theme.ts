@@ -1,10 +1,24 @@
-import { createTheme } from '@mantine/core';
+import { Drawer, Modal, createTheme, rgba } from '@mantine/core';
 
-import type { MantineColorsTuple, MantineThemeOverride } from '@mantine/core';
+import type {
+    CSSVariablesResolver,
+    MantineColorsTuple,
+    MantineThemeOverride,
+} from '@mantine/core';
 
 export const defaultThemeHue = 208;
 
 export const brandColor = 'brand';
+
+export const defaultSurfaceOpacity = 100;
+
+export const minSurfaceOpacity = 40;
+
+export const translucentSurfaceOpacity = 85;
+
+export const solidBodyVariable = '--dashb-body-solid';
+
+export const solidBodyColor = `var(${solidBodyVariable})`;
 
 export function clampHue(hue: number): number {
     if (!Number.isFinite(hue)) return defaultThemeHue;
@@ -70,10 +84,56 @@ export function hueShades(hue: number): MantineColorsTuple {
     ];
 }
 
+export function clampSurfaceOpacity(opacity: number): number {
+    if (!Number.isFinite(opacity)) return defaultSurfaceOpacity;
+
+    return Math.min(
+        defaultSurfaceOpacity,
+        Math.max(minSurfaceOpacity, Math.round(opacity))
+    );
+}
+
+export function isTranslucent(opacity: number): boolean {
+    return clampSurfaceOpacity(opacity) < defaultSurfaceOpacity;
+}
+
+const solidSurface = { backgroundColor: solidBodyColor };
+
 export function themeForHue(hue: number): MantineThemeOverride {
     return createTheme({
         primaryColor: brandColor,
         colors: { [brandColor]: hueShades(hue) },
         autoContrast: true,
+        components: {
+            Modal: Modal.extend({
+                styles: { content: solidSurface, header: solidSurface },
+            }),
+            Drawer: Drawer.extend({
+                styles: { content: solidSurface, header: solidSurface },
+            }),
+        },
     });
+}
+
+export function surfaceVariables(opacity: number): CSSVariablesResolver {
+    const alpha = clampSurfaceOpacity(opacity) / 100;
+
+    return (theme) => {
+        const light = theme.white;
+        const dark = theme.colors.dark[7];
+        const translucent = (color: string): Record<string, string> =>
+            alpha < 1 ? { '--mantine-color-body': rgba(color, alpha) } : {};
+
+        return {
+            variables: {},
+            light: {
+                [solidBodyVariable]: light,
+                ...translucent(light),
+            },
+            dark: {
+                [solidBodyVariable]: dark,
+                ...translucent(dark),
+            },
+        };
+    };
 }

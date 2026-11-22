@@ -1,5 +1,7 @@
 import { Image } from '@mantine/core';
 
+import { solidBodyColor } from '#/lib/theme';
+
 import PreviewStage from './PreviewStage';
 import { t } from './i18n';
 
@@ -42,7 +44,7 @@ export default function FilePreviewBody({
                         height: kind === 'pdf' ? 540 : 360,
                         border: 0,
                         borderRadius: 'var(--mantine-radius-sm)',
-                        background: 'var(--mantine-color-body)',
+                        background: solidBodyColor,
                     }}
                 />
             );

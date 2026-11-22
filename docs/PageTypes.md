@@ -511,12 +511,17 @@ static file:
 | `<iframe>`                    | `iframe`         | yes                    |
 | link, download, new tab       | `document`       | yes                    |
 
-So media cannot be pointed straight at the route, and
-[useDocumentFile.ts](../src/components/Pages/PageTypes/documents/useDocumentFile.ts)
+So media cannot be pointed straight at the route, and `useDocumentFile` in
+[src/lib/page-documents.ts](../src/lib/page-documents.ts)
 `fetch`es the bytes — `Sec-Fetch-Dest: empty`, which is allowed — and hands the
 element an object URL instead, revoking it on cleanup. The iframe previews and
 both download buttons keep the real URL, because their dest is on the allowed
-list.
+list. It is also what paints the app's background image, which is why the hook
+sits in the shared lib rather than in this page type's folder.
+
+The route sends an `ETag` and answers `304` to an `If-None-Match`, so a file the
+browser has already seen is revalidated rather than downloaded again — worth
+knowing if you render many of them at once, as the gallery does.
 
 The payoff of knowing which column a dest falls in: do **not** reach for a blob
 when a plain URL already works, and never debug this by changing the path. No
@@ -552,6 +557,7 @@ server first. The same rules as widgets apply:
 | `FieldsForm`                            | `#/components/Widgets/FieldsForm`  | A validated form for any field list                     |
 | `toInlineImageUrl`                      | `#/components/Widgets/inlineImage` | Downscale a picked image to a data URL you can store    |
 | `useDocuments(pageId)`                  | `#/lib/page-documents`             | A page's document tree, with create/rename/move/upload  |
+| `useDocumentFile(id)`                   | `#/lib/page-documents`             | One file's bytes as an object URL an element can render |
 | `usePageRecords(pageId, collection)`    | `#/lib/page-records`               | Rows of your own on a page, with no schema change       |
 
 ## What happens automatically

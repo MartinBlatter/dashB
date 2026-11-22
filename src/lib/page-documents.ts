@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import {
     queryOptions,
     useMutation,
@@ -60,14 +61,16 @@ export function normalizeMimeType(raw: string | null | undefined): string {
     return mimePattern.test(value) ? value : fallbackMimeType;
 }
 
-const previewImageTypes: ReadonlySet<string> = new Set([
+export const imageMimeTypes = [
     'image/png',
     'image/jpeg',
     'image/gif',
     'image/webp',
     'image/avif',
     'image/bmp',
-]);
+] as const;
+
+const previewImageTypes: ReadonlySet<string> = new Set(imageMimeTypes);
 
 const previewTextTypes: ReadonlySet<string> = new Set([
     'text/plain',
@@ -529,3 +532,103 @@ export function useDocuments(pageId: string): DocumentStore {
         },
     };
 }
+
+export type DocumentFile =
+    | { status: 'loading'; url: null }
+    | { status: 'ready'; url: string }
+    | { status: 'error'; url: null };
+
+const loadingFile: DocumentFile = { status: 'loading', url: null };
+
+export function useDocumentFile(id: string | null): DocumentFile {
+    const [file, setFile] = useState<DocumentFile>(loadingFile);
+
+    useEffect(() => {
+        setFile(loadingFile);
+
+        if (id === null) return;
+
+        const controller = new AbortController();
+
+        let objectUrl: string | null = null;
+
+        const load = async () => {
+            try {
+                const response = await fetch(documentFileUrl(id), {
+                    signal: controller.signal,
+                });
+
+                if (!response.ok) throw new Error(String(response.status));
+
+                objectUrl = URL.createObjectURL(await response.blob());
+
+                setFile({ status: 'ready', url: objectUrl });
+            } catch {
+                if (!controller.signal.aborted) {
+                    setFile({ status: 'error', url: null });
+                }
+            }
+        };
+
+        void load();
+
+        return () => {
+            controller.abort();
+
+            if (objectUrl !== null) URL.revokeObjectURL(objectUrl);
+        };
+    }, [id]);
+
+    return file;
+}
+
+export interface BackgroundImageOption {
+    id: string;
+    name: string;
+    size: number;
+    pageId: string;
+    pageTitle: string;
+}
+
+export const maxBackgroundImageOptions = 500;
+
+export const fetchBackgroundImages = createServerFn({ method: 'GET' }).handler(
+    async (): Promise<Array<BackgroundImageOption>> => {
+        const userId = await currentUserId();
+
+        if (!userId) return [];
+
+        const rows = await prisma.document.findMany({
+            where: {
+                userId,
+                kind: 'file',
+                mimeType: { in: [...imageMimeTypes] },
+            },
+            orderBy: [{ updatedAt: 'desc' }],
+            take: maxBackgroundImageOptions,
+            select: {
+                id: true,
+                name: true,
+                size: true,
+                pageId: true,
+                page: { select: { title: true } },
+            },
+        });
+
+        return rows.map((row) => ({
+            id: row.id,
+            name: row.name,
+            size: row.size,
+            pageId: row.pageId,
+            pageTitle: row.page.title,
+        }));
+    }
+);
+
+export const backgroundImagesQueryKey = ['background-images'] as const;
+
+export const backgroundImagesQueryOptions = () =>
+    queryOptions({
+        queryKey: backgroundImagesQueryKey,
+        queryFn: () => fetchBackgroundImages(),
+    });

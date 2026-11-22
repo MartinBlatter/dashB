@@ -143,13 +143,54 @@ Mantine needs (`themeForHue`), always under the color name `brand`, so
 components keep using `color="brand"` or the default primary color and nothing
 references a fixed hue.
 
-The hue is stored per user in `user_settings.themeHue`, read and written by the
-server functions in
-[src/lib/user-settings.ts](src/lib/user-settings.ts). The root route resolves it
-in `beforeLoad`, so the server already renders the right CSS variables and the
-colors do not flash on load. Dragging the slider writes the previewed hue
-straight into the query cache — the whole app re-themes live — and releasing it
-persists the value.
+All three appearance settings live per user on `user_settings` — `themeHue`,
+`surfaceOpacity` and `backgroundImageId` — read and written by the two server
+functions in [src/lib/user-settings.ts](src/lib/user-settings.ts):
+`fetchUserSettings` and `updateUserSettings`, which takes a partial patch so one
+control never overwrites another's value. The root route resolves them in
+`beforeLoad`, so the server already renders the right CSS variables and nothing
+flashes on load. Dragging a slider writes the previewed value straight into the
+query cache — the whole app re-themes live — and releasing it persists.
+
+#### Semi-transparent surfaces
+
+`surfaceOpacity` is a percentage, and anything under 100 is the glass mode;
+`surfaceVariables(opacity)` returns the `cssVariablesResolver` that
+`MantineProvider` is given. It overrides exactly one Mantine variable,
+`--mantine-color-body`, with an `rgba()` value — which is all it takes, because
+that one variable is what `body`, the `AppShell` header, navbar and footer, and
+every `Paper` and `Card` paint themselves with. Dropdowns, popovers, tooltips
+and inputs read `--mantine-color-white` / `--mantine-color-dark-6` instead, so
+they stay opaque for free.
+
+The resolver also always publishes `--dashb-body-solid`, the opaque body color
+for the current scheme. That is what the surfaces which must **not** go
+see-through are pinned to: `Modal` and `Drawer` content (via `theme.components`
+in `themeForHue`), a sticky `Table` header and the article editor's sticky
+toolbar — a translucent sticky element lets the content scroll visibly through
+it. Reach for `solidBodyColor` whenever you add another sticky or overlapping
+surface.
+
+At 100% none of this is emitted, no inline style is set and the rendered output
+is what it was before the feature existed.
+
+#### The background image
+
+`backgroundImageId` points at one of the user's own uploaded image files — the
+`document` rows that documents and gallery pages share — picked in
+[BackgroundImageModal](src/components/Header/BackgroundImageModal.tsx), which
+lists them grouped by page and loads each thumbnail only once it scrolls into
+view. The column is a real foreign key with `onDelete: SetNull`, so deleting the
+picture on its own page clears the preference instead of leaving a dangling id.
+
+[AppBackground](src/components/AppBackground/AppBackground.tsx) paints it: a
+`position: fixed` layer at `z-index: -1`, which is why `body` is set to
+`transparent` in glass mode — body's own background would otherwise paint over
+it. The image cannot be a plain CSS `url()` pointing at the file route, for the
+`Sec-Fetch-Dest` reason in [docs/PageTypes.md](docs/PageTypes.md); it goes
+through `useDocumentFile`, the same `fetch`-to-object-URL hook the gallery uses.
+Picking an image while the slider still sits at 100% also nudges the opacity
+down, so the choice is visible straight away.
 
 ### Forms
 

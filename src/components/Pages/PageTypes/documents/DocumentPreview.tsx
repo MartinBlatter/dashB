@@ -6,6 +6,7 @@ import {
     documentDownloadUrl,
     documentFileUrl,
     documentPreviewKind,
+    useDocumentFile,
 } from '#/lib/page-documents';
 import { getLocale } from '#/paraglide/runtime';
 
@@ -13,7 +14,6 @@ import FilePreviewBody from './FilePreviewBody';
 import PreviewStage from './PreviewStage';
 import { documentIcon, documentTypeLabel, formatSize } from './format';
 import { t } from './i18n';
-import { useDocumentFile } from './useDocumentFile';
 
 import type { ReactElement } from 'react';
 import type { DocumentNode } from '#/lib/page-documents';

@@ -20,6 +20,9 @@ import {
 import { useDisclosure } from '@mantine/hooks';
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools';
 import { TanStackDevtools } from '@tanstack/react-devtools';
+import AppBackground, {
+    glassSectionClass,
+} from '../components/AppBackground/AppBackground';
 import Footer from '../components/Footer/Footer';
 import Header from '../components/Header/Header';
 import ColorSchemeToggle from '../components/Header/ColorSchemeToggle';
@@ -33,8 +36,8 @@ import Navbar from '#/components/Navbar/Navbar';
 import NavbarMenu from '#/components/Navbar/NavbarMenu';
 import { isPublicPath } from '#/lib/auth-routes';
 import { sessionQueryOptions, useSession } from '#/lib/session';
-import { themeForHue } from '#/lib/theme';
-import { userSettingsQueryOptions, useThemeHue } from '#/lib/user-settings';
+import { isTranslucent, surfaceVariables, themeForHue } from '#/lib/theme';
+import { userSettingsQueryOptions, useUserSettings } from '#/lib/user-settings';
 
 interface MyRouterContext {
     queryClient: QueryClient;
@@ -104,7 +107,14 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         useDisclosure(true);
 
     const session = useSession();
-    const theme = themeForHue(useThemeHue());
+    const settings = useUserSettings();
+    const theme = themeForHue(settings.themeHue);
+    const translucent = isTranslucent(settings.surfaceOpacity);
+    const glassSections = {
+        header: glassSectionClass,
+        navbar: glassSectionClass,
+        footer: glassSectionClass,
+    };
 
     return (
         <html lang={getLocale()} {...mantineHtmlProps} suppressHydrationWarning>
@@ -112,8 +122,21 @@ function RootDocument({ children }: { children: React.ReactNode }) {
                 <ColorSchemeScript />
                 <HeadContent />
             </head>
-            <body>
-                <MantineProvider theme={theme} defaultColorScheme="auto">
+            <body
+                style={
+                    translucent ? { backgroundColor: 'transparent' } : undefined
+                }
+            >
+                <MantineProvider
+                    theme={theme}
+                    defaultColorScheme="auto"
+                    cssVariablesResolver={surfaceVariables(
+                        settings.surfaceOpacity
+                    )}
+                >
+                    {translucent ? (
+                        <AppBackground imageId={settings.backgroundImageId} />
+                    ) : null}
                     {session?.user ? (
                         <AppShell
                             header={{ height: 60 }}
@@ -128,6 +151,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
                             resize={resize}
                             padding={{ base: 10, sm: 15, lg: 'xl' }}
                             footer={{ height: 60 }}
+                            classNames={translucent ? glassSections : undefined}
                         >
                             <AppShell.Header>
                                 <Header

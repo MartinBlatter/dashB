@@ -5,15 +5,61 @@ import { z } from 'zod';
 
 import { prisma } from '#/db';
 import { auth } from '#/lib/auth';
-import { defaultThemeHue } from '#/lib/theme';
+import { documentPreviewKind, normalizeMimeType } from '#/lib/page-documents';
+import {
+    clampSurfaceOpacity,
+    defaultSurfaceOpacity,
+    defaultThemeHue,
+    minSurfaceOpacity,
+} from '#/lib/theme';
 
 export interface UserSettings {
     themeHue: number;
+    surfaceOpacity: number;
+    backgroundImageId: string | null;
 }
 
-const setThemeHueInput = z.object({
-    themeHue: z.number().int().min(0).max(359),
+export const defaultUserSettings: UserSettings = {
+    themeHue: defaultThemeHue,
+    surfaceOpacity: defaultSurfaceOpacity,
+    backgroundImageId: null,
+};
+
+const updateUserSettingsInput = z.object({
+    themeHue: z.number().int().min(0).max(359).optional(),
+    surfaceOpacity: z
+        .number()
+        .int()
+        .min(minSurfaceOpacity)
+        .max(defaultSurfaceOpacity)
+        .optional(),
+    backgroundImageId: z.string().min(1).nullable().optional(),
 });
+
+const settingsSelect = {
+    themeHue: true,
+    surfaceOpacity: true,
+    backgroundImageId: true,
+} as const;
+
+type SettingsRow = {
+    themeHue: number | null;
+    surfaceOpacity: number | null;
+    backgroundImageId: string | null;
+};
+
+function toSettings(row: SettingsRow | null): UserSettings {
+    if (row === null) return defaultUserSettings;
+
+    return {
+        themeHue: row.themeHue ?? defaultThemeHue,
+        surfaceOpacity:
+            row.surfaceOpacity === null
+                ? defaultSurfaceOpacity
+                : clampSurfaceOpacity(row.surfaceOpacity),
+        backgroundImageId: row.backgroundImageId,
+    };
+}
 
 async function currentUserId(): Promise<string | null> {
     const { headers } = getRequest();
@@ -22,36 +68,53 @@ async function currentUserId(): Promise<string | null> {
     return session?.user.id ?? null;
 }
 
+async function ownedImage(userId: string, id: string): Promise<void> {
+    const row = await prisma.document.findFirst({
+        where: { id, userId, kind: 'file' },
+        select: { mimeType: true },
+    });
+
+    if (!row) throw new Error('Image not found');
+
+    if (documentPreviewKind(normalizeMimeType(row.mimeType)) !== 'image') {
+        throw new Error('Not an image');
+    }
+}
+
 export const fetchUserSettings = createServerFn({ method: 'GET' }).handler(
     async (): Promise<UserSettings> => {
         const userId = await currentUserId();
 
-        if (!userId) return { themeHue: defaultThemeHue };
+        if (!userId) return defaultUserSettings;
 
         const settings = await prisma.userSettings.findUnique({
             where: { userId },
-            select: { themeHue: true },
+            select: settingsSelect,
         });
 
-        return { themeHue: settings?.themeHue ?? defaultThemeHue };
+        return toSettings(settings);
     }
 );
 
-export const setThemeHue = createServerFn({ method: 'POST' })
-    .validator(setThemeHueInput)
+export const updateUserSettings = createServerFn({ method: 'POST' })
+    .validator(updateUserSettingsInput)
     .handler(async ({ data }): Promise<UserSettings> => {
         const userId = await currentUserId();
 
         if (!userId) throw new Error('Not signed in');
 
+        if (typeof data.backgroundImageId === 'string') {
+            await ownedImage(userId, data.backgroundImageId);
+        }
+
         const settings = await prisma.userSettings.upsert({
             where: { userId },
-            create: { userId, themeHue: data.themeHue },
-            update: { themeHue: data.themeHue },
-            select: { themeHue: true },
+            create: { userId, ...data },
+            update: data,
+            select: settingsSelect,
         });
 
-        return { themeHue: settings.themeHue ?? defaultThemeHue };
+        return toSettings(settings);
     });
 
 export const userSettingsQueryKey = ['user-settings'] as const;
@@ -63,8 +126,8 @@ export const userSettingsQueryOptions = () =>
         staleTime: 30_000,
     });
 
-export function useThemeHue(): number {
+export function useUserSettings(): UserSettings {
     const { data } = useQuery(userSettingsQueryOptions());
 
-    return data?.themeHue ?? defaultThemeHue;
+    return data ?? defaultUserSettings;
 }

@@ -1,7 +1,8 @@
 import { Box, Skeleton, Text } from '@mantine/core';
 import { ImageBrokenIcon } from '@phosphor-icons/react';
 
-import { useDocumentFile } from '../documents/useDocumentFile';
+import { useDocumentFile } from '#/lib/page-documents';
+
 import { t } from './i18n';
 
 import classes from './gallery.module.css';

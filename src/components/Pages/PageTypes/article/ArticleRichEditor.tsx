@@ -9,6 +9,7 @@ import {
     imageTooLargeError,
     toInlineImageUrl,
 } from '#/components/Widgets/inlineImage';
+import { solidBodyColor } from '#/lib/theme';
 
 import { t } from './i18n';
 import classes from './article.module.css';
@@ -60,6 +61,7 @@ export default function ArticleRichEditor({
             <RichTextEditor.Toolbar
                 sticky
                 stickyOffset="var(--app-shell-header-offset, 60px)"
+                bg={solidBodyColor}
             >
                 <RichTextEditor.ControlsGroup>
                     <RichTextEditor.H1 />

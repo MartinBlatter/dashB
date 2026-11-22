@@ -15,6 +15,8 @@ import {
 } from '@dnd-kit/sortable';
 import { PlusIcon } from '@phosphor-icons/react';
 
+import { solidBodyColor } from '#/lib/theme';
+
 import TableEntryRow from './TableEntryRow';
 import TableHeaderCell from './TableHeaderCell';
 import { t } from './i18n';
@@ -87,6 +89,7 @@ export default function TableView({
                     highlightOnHover
                     withTableBorder
                     verticalSpacing="xs"
+                    styles={{ thead: { backgroundColor: solidBodyColor } }}
                 >
                     <Table.Thead>
                         <Table.Tr>
