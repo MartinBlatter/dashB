@@ -4,6 +4,7 @@ on:
     push:
         tags:
             - 'v*'
+            - '[0-9]*'
     workflow_dispatch:
 
 permissions:
@@ -45,13 +46,14 @@ jobs:
                   cache: pnpm
 
             - name: Check the tag matches the app version
-              if: startsWith(github.ref, 'refs/tags/v')
+              if: startsWith(github.ref, 'refs/tags/')
               run: |
                   version=$(node -p "require('./electron/package.json').version")
-                  tag=${GITHUB_REF#refs/tags/v}
+                  tag=${GITHUB_REF#refs/tags/}
+                  tag=${tag#v}
 
                   if [ "$version" != "$tag" ]; then
-                      echo "tag v$tag does not match electron/package.json version $version" >&2
+                      echo "tag $tag does not match electron/package.json version $version" >&2
                       exit 1
                   fi
 
@@ -79,7 +81,7 @@ jobs:
             - name: Package
               run: >
                   pnpm exec electron-builder ${{ matrix.targets }}
-                  --publish ${{ startsWith(github.ref, 'refs/tags/v') && 'always' || 'never' }}
+                  --publish ${{ startsWith(github.ref, 'refs/tags/') && 'always' || 'never' }}
               env:
                   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

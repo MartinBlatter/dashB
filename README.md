@@ -384,7 +384,7 @@ git push --tags
 
 The tag must match that `version` — the workflow checks it and stops early if it
 does not, because electron-builder names the release after the app version and
-not after the tag. Each platform job repeats what a local pack does
+not after the tag. A bare `0.2.0` works as well as `v0.2.0`. Each platform job repeats what a local pack does
 (`prisma generate`, `pnpm build`, `pnpm desktop:native`, electron-builder) and
 publishes into a **draft** release, so the notes can be written before anything
 is visible. The two jobs run one after the other because they write to the same
