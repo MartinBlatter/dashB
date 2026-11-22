@@ -25,6 +25,7 @@ win:
     target:
         - nsis
 nsis:
+    artifactName: DashB-Setup-${arch}.${ext}
     oneClick: false
     perMachine: false
     allowToChangeInstallationDirectory: true
@@ -32,6 +33,7 @@ nsis:
     createStartMenuShortcut: true
     differentialPackage: false
 linux:
+    artifactName: dashb-${arch}.${ext}
     target:
         - AppImage
         - deb

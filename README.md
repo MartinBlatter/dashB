@@ -3,6 +3,24 @@
 A dashboard app built on TanStack Start, with Mantine for UI, Prisma + SQLite
 for storage and Better Auth for sign-in.
 
+## Download
+
+The desktop app runs the whole thing locally — server, database and all — so
+there is nothing to set up but the installer.
+
+| Platform              | Download                                                                                                   |
+| --------------------- | ---------------------------------------------------------------------------------------------------------- |
+| Windows (x64)         | [DashB-Setup-x64.exe](https://github.com/MartinBlatter/dashB/releases/latest/download/DashB-Setup-x64.exe) |
+| Linux (x64, AppImage) | [dashb-x64.AppImage](https://github.com/MartinBlatter/dashB/releases/latest/download/dashb-x64.AppImage)   |
+| Debian, Ubuntu (x64)  | [dashb-x64.deb](https://github.com/MartinBlatter/dashB/releases/latest/download/dashb-x64.deb)             |
+
+Those links always point at the newest [release](https://github.com/MartinBlatter/dashB/releases),
+because the file names carry no version number. The installer is not code-signed
+yet, so Windows SmartScreen warns on first run — _More info_ then _Run anyway_.
+
+New to the app? The [user guide](docs/UserGuide.md) is also in the app itself,
+behind the help link in the footer.
+
 ## Getting started
 
 ```bash
@@ -380,6 +398,13 @@ The `publish:` block in [electron-builder.yml](electron-builder.yml) names the
 repository and makes electron-builder emit the `latest.yml` manifests an
 auto-updater would read. Release assets inherit the repository's visibility, so
 while the repo is private every download needs a token.
+
+`artifactName` keeps the version out of the file names — `DashB-Setup-x64.exe`,
+not `DashB Setup 0.1.0.exe` — which is what lets the
+`releases/latest/download/<file>` links in [Download](#download) keep working
+across releases. Two consequences: the links 404 until the draft release is
+actually published, and a downloaded file no longer says which version it is
+(the app does, and `latest.yml` records it).
 
 ### The app icon
 
