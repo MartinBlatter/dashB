@@ -14,3 +14,7 @@ src/routeTree.gen.ts
 project.inlang/cache
 project.inlang/.lix
 project.inlang/.meta.json
+
+release
+build/native
+migrations

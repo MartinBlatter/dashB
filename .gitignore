@@ -15,3 +15,7 @@ __unconfig*
 *.db
 *.db-journal
 src/generated
+
+# Desktop build
+release
+build/native

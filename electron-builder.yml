@@ -1,0 +1,40 @@
+appId: dev.dashb.desktop
+productName: DashB
+electronVersion: 42.11.18
+npmRebuild: false
+directories:
+    app: electron
+    output: release
+    buildResources: build/resources
+files:
+    - '**/*'
+    - '!node_modules'
+    - '!node_modules/**/*'
+extraResources:
+    - from: .output
+      to: output
+    - from: migrations
+      to: migrations
+asar: true
+publish:
+    provider: github
+    owner: MartinBlatter
+    repo: dashB
+    releaseType: draft
+win:
+    target:
+        - nsis
+nsis:
+    oneClick: false
+    perMachine: false
+    allowToChangeInstallationDirectory: true
+    createDesktopShortcut: true
+    createStartMenuShortcut: true
+    differentialPackage: false
+linux:
+    target:
+        - AppImage
+        - deb
+    category: Utility
+    synopsis: Personal dashboard
+    executableName: dashb

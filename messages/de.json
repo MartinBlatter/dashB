@@ -136,5 +136,16 @@
         "signInFailed": "Anmeldung fehlgeschlagen. Bitte prüfe deine Zugangsdaten.",
         "signUpFailed": "Konto konnte nicht erstellt werden. Bitte versuche es erneut.",
         "signOutFailed": "Abmeldung fehlgeschlagen. Bitte versuche es erneut."
+    },
+    "footer": {
+        "help": "Hilfe"
+    },
+    "help": {
+        "title": "Hilfe",
+        "intro": "Die Projektdokumentation, gerendert aus den Markdown-Dateien im Repository. Sie liegt nur auf Englisch vor.",
+        "contents": "Auf dieser Seite",
+        "source": "Auf GitHub ansehen",
+        "not_found": "Unter dieser Adresse gibt es keine Hilfeseite.",
+        "back": "Zurück zur Hilfe"
     }
 }

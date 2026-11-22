@@ -1,0 +1,94 @@
+name: Release
+
+on:
+    push:
+        tags:
+            - 'v*'
+    workflow_dispatch:
+
+permissions:
+    contents: write
+
+defaults:
+    run:
+        shell: bash
+
+jobs:
+    build:
+        strategy:
+            fail-fast: false
+            max-parallel: 1
+            matrix:
+                include:
+                    - os: windows-latest
+                      name: windows
+                      native: ''
+                      targets: --win nsis
+                    - os: ubuntu-latest
+                      name: linux
+                      native: --platform=linux
+                      targets: --linux AppImage deb
+
+        name: ${{ matrix.name }}
+        runs-on: ${{ matrix.os }}
+
+        steps:
+            - uses: actions/checkout@v4
+
+            - uses: pnpm/action-setup@v4
+              with:
+                  version: 11.9.0
+
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: 24
+                  cache: pnpm
+
+            - name: Check the tag matches the app version
+              if: startsWith(github.ref, 'refs/tags/v')
+              run: |
+                  version=$(node -p "require('./electron/package.json').version")
+                  tag=${GITHUB_REF#refs/tags/v}
+
+                  if [ "$version" != "$tag" ]; then
+                      echo "tag v$tag does not match electron/package.json version $version" >&2
+                      exit 1
+                  fi
+
+            - name: Cache the Electron downloads
+              uses: actions/cache@v4
+              with:
+                  key: electron-${{ runner.os }}-${{ hashFiles('electron-builder.yml') }}
+                  path: |
+                      ~/.cache/electron
+                      ~/.cache/electron-builder
+                      ~/AppData/Local/electron/Cache
+                      ~/AppData/Local/electron-builder/Cache
+
+            - run: pnpm install --frozen-lockfile
+
+            - name: Generate the Prisma client
+              run: pnpm exec prisma generate
+
+            - name: Build the server
+              run: pnpm build
+
+            - name: Fetch better-sqlite3 for Electron's ABI
+              run: pnpm desktop:native ${{ matrix.native }}
+
+            - name: Package
+              run: >
+                  pnpm exec electron-builder ${{ matrix.targets }}
+                  --publish ${{ startsWith(github.ref, 'refs/tags/v') && 'always' || 'never' }}
+              env:
+                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+            - uses: actions/upload-artifact@v4
+              with:
+                  name: dashb-${{ matrix.name }}
+                  if-no-files-found: error
+                  path: |
+                      release/*.exe
+                      release/*.AppImage
+                      release/*.deb
+                      release/latest*.yml

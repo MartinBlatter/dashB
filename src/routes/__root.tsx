@@ -86,6 +86,7 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
             },
         ],
         links: [
+            { rel: 'icon', href: '/icon.svg', type: 'image/svg+xml' },
             { rel: 'stylesheet', href: mantineCoreStyles },
             { rel: 'stylesheet', href: mantineDatesStyles },
             { rel: 'stylesheet', href: mantineScheduleStyles },

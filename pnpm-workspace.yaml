@@ -4,6 +4,8 @@ allowBuilds:
     '@prisma/engines': true
     prisma: true
     better-sqlite3: true
+    electron: true
+    electron-winstaller: false
 minimumReleaseAgeExclude:
     - '@tanstack/query-core@5.105.3'
     - '@tanstack/query-devtools@5.105.3'

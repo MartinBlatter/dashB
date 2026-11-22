@@ -13,6 +13,8 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as SplatRouteImport } from './routes/$'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as RegisterRouteImport } from './routes/register'
+import { Route as HelpIndexRouteImport } from './routes/help/index'
+import { Route as HelpDocRouteImport } from './routes/help/$doc'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as ApiDocumentsSplatRouteImport } from './routes/api/documents/$'
 
@@ -36,6 +38,16 @@ const RegisterRoute = RegisterRouteImport.update({
   path: '/register',
   getParentRoute: () => rootRouteImport,
 } as any)
+const HelpIndexRoute = HelpIndexRouteImport.update({
+  id: '/help/',
+  path: '/help/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HelpDocRoute = HelpDocRouteImport.update({
+  id: '/help/$doc',
+  path: '/help/$doc',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
@@ -52,6 +64,8 @@ export interface FileRoutesByFullPath {
   '/$': typeof SplatRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
+  '/help/$doc': typeof HelpDocRoute
+  '/help/': typeof HelpIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/documents/$': typeof ApiDocumentsSplatRoute
 }
@@ -60,6 +74,8 @@ export interface FileRoutesByTo {
   '/$': typeof SplatRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
+  '/help/$doc': typeof HelpDocRoute
+  '/help': typeof HelpIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/documents/$': typeof ApiDocumentsSplatRoute
 }
@@ -69,21 +85,40 @@ export interface FileRoutesById {
   '/$': typeof SplatRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
+  '/help/$doc': typeof HelpDocRoute
+  '/help/': typeof HelpIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/documents/$': typeof ApiDocumentsSplatRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/$' | '/login' | '/register' | '/api/auth/$' | '/api/documents/$'
+    | '/'
+    | '/$'
+    | '/login'
+    | '/register'
+    | '/help/$doc'
+    | '/help/'
+    | '/api/auth/$'
+    | '/api/documents/$'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/$' | '/login' | '/register' | '/api/auth/$' | '/api/documents/$'
+  to:
+    | '/'
+    | '/$'
+    | '/login'
+    | '/register'
+    | '/help/$doc'
+    | '/help'
+    | '/api/auth/$'
+    | '/api/documents/$'
   id:
     | '__root__'
     | '/'
     | '/$'
     | '/login'
     | '/register'
+    | '/help/$doc'
+    | '/help/'
     | '/api/auth/$'
     | '/api/documents/$'
   fileRoutesById: FileRoutesById
@@ -93,6 +128,8 @@ export interface RootRouteChildren {
   SplatRoute: typeof SplatRoute
   LoginRoute: typeof LoginRoute
   RegisterRoute: typeof RegisterRoute
+  HelpDocRoute: typeof HelpDocRoute
+  HelpIndexRoute: typeof HelpIndexRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiDocumentsSplatRoute: typeof ApiDocumentsSplatRoute
 }
@@ -127,6 +164,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RegisterRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/help/': {
+      id: '/help/'
+      path: '/help'
+      fullPath: '/help/'
+      preLoaderRoute: typeof HelpIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/help/$doc': {
+      id: '/help/$doc'
+      path: '/help/$doc'
+      fullPath: '/help/$doc'
+      preLoaderRoute: typeof HelpDocRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/auth/$': {
       id: '/api/auth/$'
       path: '/api/auth/$'
@@ -149,6 +200,8 @@ const rootRouteChildren: RootRouteChildren = {
   SplatRoute: SplatRoute,
   LoginRoute: LoginRoute,
   RegisterRoute: RegisterRoute,
+  HelpDocRoute: HelpDocRoute,
+  HelpIndexRoute: HelpIndexRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiDocumentsSplatRoute: ApiDocumentsSplatRoute,
 }
