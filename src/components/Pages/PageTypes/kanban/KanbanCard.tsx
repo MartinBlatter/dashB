@@ -8,6 +8,8 @@ import {
     TrashIcon,
 } from '@phosphor-icons/react';
 
+import { useDateFormat } from '#/lib/user-settings';
+
 import { dueText, isOverdue } from './format';
 import { t } from './i18n';
 import { cardTitle } from './kanban';
@@ -41,6 +43,7 @@ export default function KanbanCard({
         isDragging,
     } = useSortable({ id: card.id, disabled: !dragEnabled });
 
+    const dateFormat = useDateFormat();
     const overdue = isOverdue(card.due, today);
 
     return (
@@ -116,7 +119,7 @@ export default function KanbanCard({
                         <Text size="xs" c={overdue ? 'red' : 'dimmed'}>
                             {t('due_label').replace(
                                 '{date}',
-                                dueText(card.due)
+                                dueText(card.due, dateFormat)
                             )}
                         </Text>
                     </Group>

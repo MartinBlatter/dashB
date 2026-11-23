@@ -1,5 +1,8 @@
 import { DateTimePicker } from '@mantine/dates';
 
+import { pickerDateTimeFormat } from '#/lib/date-format';
+import { useDateFormat } from '#/lib/user-settings';
+
 import { useBoundField } from './use-bound-field';
 
 import type { BoundInputProps } from './use-bound-field';
@@ -19,9 +22,11 @@ export function DateTimeField(
     props: Omit<DateTimePickerProps, BoundInputProps>
 ) {
     const { field, value, error } = useBoundField<string>();
+    const dateFormat = useDateFormat();
 
     return (
         <DateTimePicker
+            valueFormat={pickerDateTimeFormat(dateFormat)}
             {...props}
             value={value === '' ? null : value}
             onChange={(next) => field.handleChange(next ?? '')}

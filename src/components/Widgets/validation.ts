@@ -92,12 +92,14 @@ function widgetFieldSchema(
     }
 }
 
+export function widgetValuesObject(fields: ReadonlyArray<WidgetField>) {
+    return z.object(
+        Object.fromEntries(
+            fields.map((field) => [field.name, widgetFieldSchema(field)])
+        )
+    );
+}
+
 export function widgetValuesSchema(fields: ReadonlyArray<WidgetField>) {
-    return z.object({
-        values: z.object(
-            Object.fromEntries(
-                fields.map((field) => [field.name, widgetFieldSchema(field)])
-            )
-        ),
-    });
+    return z.object({ values: widgetValuesObject(fields) });
 }

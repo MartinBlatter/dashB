@@ -13,6 +13,8 @@ export const t = createWidgetMessages({
         outline: 'On this page',
         outline_empty: 'Add a heading to build the table of contents.',
         outline_jump: 'Jump to this heading',
+        edit_mode: 'Edit mode',
+        empty: 'This article is empty. Turn on edit mode to write it.',
         mode: 'Editing mode',
         mode_rich: 'Rich text',
         mode_markdown: 'Markdown',
@@ -41,6 +43,8 @@ export const t = createWidgetMessages({
         outline_empty:
             'Füge eine Überschrift hinzu, um das Inhaltsverzeichnis aufzubauen.',
         outline_jump: 'Zu dieser Überschrift springen',
+        edit_mode: 'Bearbeiten',
+        empty: 'Dieser Artikel ist leer. Schalte „Bearbeiten“ ein, um ihn zu schreiben.',
         mode: 'Bearbeitungsmodus',
         mode_rich: 'Formatiert',
         mode_markdown: 'Markdown',

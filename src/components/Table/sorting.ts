@@ -5,7 +5,7 @@ import { getLocale } from '#/paraglide/runtime';
 import { entryValue, isEmptyValue } from './format';
 
 import type { StoredWidgetValue } from '#/components/Widgets/types';
-import type { TableColumn, TableEntry } from '#/lib/page-tables';
+import type { TableColumn, TableEntry } from '#/lib/table-schema';
 
 export type TableSortDirection = 'asc' | 'desc';
 

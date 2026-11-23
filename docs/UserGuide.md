@@ -40,6 +40,13 @@ The dashboard is a grid of widgets, and it is the page you land on.
 | **Schedule**      | A month calendar of your events, plus calendars you import or subscribe to. |
 | **Weather**       | Current conditions and a short forecast for a place you name.               |
 | **Bookmarks**     | Quick links to the places you keep going back to.                           |
+| **Table**         | A small table of your own columns, one row per entry.                       |
+
+The **Table** widget keeps its own columns and rows, separate from a table
+page. Press _Columns_ to add, rename, reorder or delete the columns, _Add
+entry_ for a row, and a column heading to sort by it. Its settings decide
+whether a search box is shown and how many rows fit before the rest are
+counted as _more_.
 
 ## Header widgets
 
@@ -61,10 +68,12 @@ pencil to edit its settings.
 Pages are yours to create, and each one has a **type** that decides what it
 does.
 
-1. Press _Add page_ in the sidebar and give it a **title**, a **slug** (the
-   part that appears in the address), a **position** among its neighbours and,
-   if it belongs under another page, a **parent page**.
-2. Open the new page and press _Set page type_, then pick a type.
+1. Press _Add page_ in the sidebar and give it a **title** and a **page type**,
+   which decides what the page shows. If the type has settings of its own, they
+   appear at the bottom of the dialog.
+2. The **web address** is filled in from the title as you type, and you can
+   overwrite it. Set a **position** among its neighbours and, if the page
+   belongs under another one, a **parent page**.
 3. To rename a page, move it or change its settings later, use the gear icon
    on the page, or _Edit pages_ in the sidebar. Deleting a page deletes its
    subpages with it.
@@ -89,7 +98,8 @@ A few types are worth a note:
 - **Table** — add columns of text, long text, number, date, date and time,
   choice or checkbox, mark them required, reorder them, and search your
   entries.
-- **Article** — write in rich text or switch to Markdown; the headings can
+- **Article** — the page reads as a finished document until you turn on **edit
+  mode**; then you write in rich text or switch to Markdown. The headings can
   become a table of contents beside the text.
 - **Gallery** and **Documents** — the pictures you upload here are also the
   ones you can pick as a background image.
@@ -108,6 +118,11 @@ for your account:
 - **Background image** — choose one of the pictures you uploaded on a
   documents or gallery page. Combined with a lower surface opacity, it shows
   through the whole app.
+- **Date format** — pick the order dates are written in: the one that matches
+  your language, `31.12.2026`, `31/12/2026`, `12/31/2026` or `2026-12-31`. It
+  applies everywhere a date is shown — table and kanban cards, the to-do and
+  schedule widgets, the date pickers in every form — and changes nothing about
+  the dates themselves, so switching back and forth is free.
 - **Language** — English or German. Your own text is never translated.
 
 ## Your data

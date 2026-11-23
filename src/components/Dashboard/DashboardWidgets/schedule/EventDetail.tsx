@@ -6,10 +6,12 @@ import {
     MapPinIcon,
 } from '@phosphor-icons/react';
 
-import { getLocale } from '#/paraglide/runtime';
+import { formatDate, formatTime } from '#/lib/date-format';
+import { useDateFormat } from '#/lib/user-settings';
 
 import { t } from './schedule';
 
+import type { DateFormat } from '#/lib/date-format';
 import type { ScheduleEventData } from '@mantine/schedule';
 
 export default function EventDetail({
@@ -19,6 +21,7 @@ export default function EventDetail({
     event: ScheduleEventData | null;
     onClose: () => void;
 }) {
+    const dateFormat = useDateFormat();
     const payload = event?.payload ?? {};
     const allDay = payload.allDay === true;
     const location =
@@ -51,7 +54,9 @@ export default function EventDetail({
 
                     <Group gap={6} wrap="nowrap" align="flex-start">
                         <ClockIcon size={14} />
-                        <Text size="sm">{spanLabel(event, allDay)}</Text>
+                        <Text size="sm">
+                            {spanLabel(event, allDay, dateFormat)}
+                        </Text>
                     </Group>
 
                     {location === '' ? null : (
@@ -76,48 +81,32 @@ export default function EventDetail({
     );
 }
 
-function spanLabel(event: ScheduleEventData, allDay: boolean): string {
-    const locale = getLocale();
+function spanLabel(
+    event: ScheduleEventData,
+    allDay: boolean,
+    dateFormat: DateFormat
+): string {
     const start = dayjs(event.start);
     const end = dayjs(event.end);
+    const dateText = (value: Date) =>
+        formatDate(value, dateFormat, { weekday: true, monthName: true });
 
     if (allDay) {
         const lastDay = end.subtract(1, 'day');
-        const first = dateText(start.toDate(), locale);
+        const first = dateText(start.toDate());
 
         return lastDay.isAfter(start, 'day')
-            ? `${first} – ${dateText(lastDay.toDate(), locale)}`
+            ? `${first} – ${dateText(lastDay.toDate())}`
             : `${first} · ${t('all_day')}`;
     }
 
     const sameDay = start.isSame(end, 'day');
 
     return sameDay
-        ? `${dateText(start.toDate(), locale)} · ${timeText(
-              start.toDate(),
-              locale
-          )} – ${timeText(end.toDate(), locale)}`
-        : `${dateText(start.toDate(), locale)} ${timeText(
-              start.toDate(),
-              locale
-          )} – ${dateText(end.toDate(), locale)} ${timeText(
-              end.toDate(),
-              locale
-          )}`;
-}
-
-function dateText(value: Date, locale: string): string {
-    return value.toLocaleDateString(locale, {
-        weekday: 'short',
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-    });
-}
-
-function timeText(value: Date, locale: string): string {
-    return value.toLocaleTimeString(locale, {
-        hour: '2-digit',
-        minute: '2-digit',
-    });
+        ? `${dateText(start.toDate())} · ${formatTime(
+              start.toDate()
+          )} – ${formatTime(end.toDate())}`
+        : `${dateText(start.toDate())} ${formatTime(
+              start.toDate()
+          )} – ${dateText(end.toDate())} ${formatTime(end.toDate())}`;
 }

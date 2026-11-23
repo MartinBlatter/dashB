@@ -50,7 +50,11 @@ export default function FieldsForm({
                     </Text>
                 ) : null}
 
-                <FieldInputs form={form} fields={fields} />
+                <FieldInputs
+                    form={form}
+                    fields="values"
+                    widgetFields={fields}
+                />
 
                 {submitError ? (
                     <Text size="sm" c="red">

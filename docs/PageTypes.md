@@ -354,10 +354,18 @@ export function fieldFromColumn(column: TableColumn): WidgetField {
 ```
 
 Reach for this shape when the user, not the developer, decides what a row holds.
-See [table/columns.ts](../src/components/Pages/PageTypes/table/columns.ts), and
-note that the registry's build-time field validation does **not** cover fields
-built this way — `sanitizeEntryData` in the same file is what keeps a stale
-stored value from reaching the form.
+See [Table/columns.ts](../src/components/Table/columns.ts), and note that the
+registry's build-time field validation does **not** cover fields built this way
+— `sanitizeEntryData` in the same file is what keeps a stale stored value from
+reaching the form.
+
+The table UI itself lives outside the page type, in
+[src/components/Table/](../src/components/Table/), over the column and entry
+types in [table-schema.ts](../src/lib/table-schema.ts). The page type supplies
+those rows from `table_column`/`table_entry` through `useTableColumns` and
+`useTableEntries`, and the dashboard's table widget supplies the same shapes
+from `widget_record` through `useWidgetTable` — so a page type and a widget can
+share a whole feature as long as they agree on the store's interface.
 
 ## Reusing the dashboard
 
@@ -413,8 +421,20 @@ count out of the HTML with plain string work, no `DOMParser`, so the same
 function runs on the server and in the browser and the two agree.
 
 **Re-mount, don't re-sync.** Tiptap takes its content once, at creation. To push
-externally changed text into it — here, Markdown typed in the other tab — bump a
-counter and pass it as `key` rather than reaching for `setContent`.
+externally changed text into it — here, Markdown typed in the other tab, or the
+latest text when edit mode is switched off — bump a counter and pass it as `key`
+rather than reaching for `setContent`.
+
+**Read mode is the same editor.** The page shows the document until edit mode is
+switched on, and that read view is `ArticleRichEditor` with `editable={false}`
+and no toolbar. One component means the two views cannot drift apart, and the
+HTML never has to be rendered with `dangerouslySetInnerHTML`.
+
+**Every control needs a surface.** A background image sits behind the page, so
+bare text and controls on it are unreadable. Put them on a `Paper withBorder`
+like the rest of the app — the article's toolbar row and its document are two
+such surfaces — and keep the sticky editor toolbar on `solidBodyColor` so
+scrolled text never shows through it.
 
 ## A tree of rows
 

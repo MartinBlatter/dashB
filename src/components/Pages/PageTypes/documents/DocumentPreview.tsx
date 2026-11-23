@@ -8,7 +8,8 @@ import {
     documentPreviewKind,
     useDocumentFile,
 } from '#/lib/page-documents';
-import { getLocale } from '#/paraglide/runtime';
+import { formatDate } from '#/lib/date-format';
+import { useDateFormat } from '#/lib/user-settings';
 
 import FilePreviewBody from './FilePreviewBody';
 import PreviewStage from './PreviewStage';
@@ -73,6 +74,7 @@ export default function DocumentPreview({
     childCount: number;
 }) {
     const mounted = useMounted();
+    const dateFormat = useDateFormat();
 
     if (!node) {
         return (
@@ -156,10 +158,9 @@ export default function DocumentPreview({
                 {mounted ? (
                     <DetailRow
                         label={t('modified')}
-                        value={new Date(node.updatedAt).toLocaleString(
-                            getLocale(),
-                            { dateStyle: 'short', timeStyle: 'short' }
-                        )}
+                        value={formatDate(node.updatedAt, dateFormat, {
+                            time: true,
+                        })}
                     />
                 ) : null}
             </Stack>

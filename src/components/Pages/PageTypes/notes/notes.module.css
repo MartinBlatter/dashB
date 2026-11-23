@@ -6,6 +6,14 @@
     border: none;
 }
 
+.editor .toolbar {
+    display: none;
+}
+
+.editor:focus-within .toolbar {
+    display: flex;
+}
+
 .content {
     flex: 1;
     min-height: 0;

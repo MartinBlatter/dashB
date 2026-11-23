@@ -239,6 +239,7 @@ It returns:
 | `create`    | `({ data, sortKey? }) => Promise<void>` — appends             |
 | `update`    | `({ id, data, sortKey? }) => Promise<void>` — replaces `data` |
 | `remove`    | `(id) => Promise<void>`                                       |
+| `reorder`   | `(ids) => Promise<void>` — writes `position` in that order    |
 
 `update` and `remove` apply optimistically, so a checkbox feels instant, then
 reconcile against the server. `update` **replaces** `data` wholesale: read the
@@ -643,5 +644,7 @@ stays in the eager file. `ScheduleWidget.tsx` does this for
 | `#/components/Widgets/`                                            | The shared field system: types, registry factory, values, validation, `FieldsForm`                          |
 | `#/lib/dashboard-widgets.ts`                                       | Server functions for instances and placement                                                                |
 | `#/lib/widget-records.ts`                                          | Server functions and `useWidgetRecords` for stored rows                                                     |
+| `#/components/Table/`, `#/lib/table-schema.ts`                     | The shared table UI and its column/entry types, used by both `TableWidget` and the table page type          |
+| `#/lib/widget-tables.ts`                                           | `useWidgetTable`: the shared table's column and entry stores backed by `widget_record`                      |
 | `#/lib/calendar-feeds.ts`, `#/lib/ics.ts`, `#/lib/calendar-url.ts` | Calendar feed fetching with its SSRF guard and cache, the `ical.js` parser, and URL normalisation           |
 | `prisma/schema.prisma`                                             | `DashboardWidget` and `WidgetRecord`                                                                        |

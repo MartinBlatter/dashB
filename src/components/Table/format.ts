@@ -2,10 +2,13 @@ import dayjs from 'dayjs';
 
 import { getLocale } from '#/paraglide/runtime';
 
+import { formatDate } from '#/lib/date-format';
+
 import { t } from './i18n';
 
 import type { StoredWidgetValue } from '#/components/Widgets/types';
-import type { TableColumn, TableEntry } from '#/lib/page-tables';
+import type { DateFormat } from '#/lib/date-format';
+import type { TableColumn, TableEntry } from '#/lib/table-schema';
 
 export function isEmptyValue(value: StoredWidgetValue): boolean {
     return value === null || value === '';
@@ -20,7 +23,8 @@ export function entryValue(
 
 export function cellText(
     column: TableColumn,
-    value: StoredWidgetValue
+    value: StoredWidgetValue,
+    dateFormat: DateFormat
 ): string {
     if (column.kind === 'switch') return value === true ? t('yes') : t('no');
 
@@ -38,11 +42,7 @@ export function cellText(
             const parsed = dayjs(String(value));
 
             return parsed.isValid()
-                ? parsed.toDate().toLocaleDateString(getLocale(), {
-                      day: '2-digit',
-                      month: '2-digit',
-                      year: 'numeric',
-                  })
+                ? formatDate(parsed.toDate(), dateFormat)
                 : String(value);
         }
 
@@ -50,10 +50,7 @@ export function cellText(
             const parsed = dayjs(String(value));
 
             return parsed.isValid()
-                ? parsed.toDate().toLocaleString(getLocale(), {
-                      dateStyle: 'short',
-                      timeStyle: 'short',
-                  })
+                ? formatDate(parsed.toDate(), dateFormat, { time: true })
                 : String(value);
         }
 
@@ -67,7 +64,8 @@ export function cellText(
 export function entryMatches(
     entry: TableEntry,
     columns: ReadonlyArray<TableColumn>,
-    query: string
+    query: string,
+    dateFormat: DateFormat
 ): boolean {
     const needle = query.trim().toLowerCase();
 
@@ -79,7 +77,9 @@ export function entryMatches(
         if (isEmptyValue(value) && column.kind !== 'switch') return false;
 
         return (
-            cellText(column, value).toLowerCase().includes(needle) ||
+            cellText(column, value, dateFormat)
+                .toLowerCase()
+                .includes(needle) ||
             String(value).toLowerCase().includes(needle)
         );
     });

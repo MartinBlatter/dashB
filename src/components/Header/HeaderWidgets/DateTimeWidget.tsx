@@ -2,6 +2,8 @@ import { Text } from '@mantine/core';
 
 import { createWidgetMessages } from '#/components/Widgets/i18n';
 import { useNow } from '#/components/Widgets/useNow';
+import { formatDate } from '#/lib/date-format';
+import { useDateFormat } from '#/lib/user-settings';
 
 import type { HeaderWidgetMeta, HeaderWidgetProps } from './types';
 
@@ -45,6 +47,7 @@ export const widgetMeta = {
 
 export default function DateTimeWidget({ config }: HeaderWidgetProps) {
     const now = useNow();
+    const dateFormat = useDateFormat();
     const display = config.display;
 
     if (!now) return null;
@@ -52,7 +55,7 @@ export default function DateTimeWidget({ config }: HeaderWidgetProps) {
     return (
         <div>
             {display !== 'time' ? (
-                <Text size="sm">{now.toLocaleDateString()}</Text>
+                <Text size="sm">{formatDate(now, dateFormat)}</Text>
             ) : null}
             {display !== 'date' ? (
                 <Text size="sm">{now.toLocaleTimeString()}</Text>

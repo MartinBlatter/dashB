@@ -12,12 +12,15 @@ import TableCell from './TableCell';
 import { entryValue } from './format';
 import { t } from './i18n';
 
-import type { TableColumn, TableEntry } from '#/lib/page-tables';
+import type { DateFormat } from '#/lib/date-format';
+import type { TableColumn, TableEntry } from '#/lib/table-schema';
 
 export default function TableEntryRow({
     entry,
     columns,
     mounted,
+    dateFormat,
+    draggable = true,
     dragEnabled,
     onEdit,
     onDelete,
@@ -25,6 +28,8 @@ export default function TableEntryRow({
     entry: TableEntry;
     columns: ReadonlyArray<TableColumn>;
     mounted: boolean;
+    dateFormat: DateFormat;
+    draggable?: boolean;
     dragEnabled: boolean;
     onEdit: () => void;
     onDelete: () => void;
@@ -50,29 +55,33 @@ export default function TableEntryRow({
                 opacity: isDragging ? 0.5 : 1,
             }}
         >
-            <Table.Td style={{ width: 36 }}>
-                <Tooltip
-                    label={dragEnabled ? t('reorder') : t('reorder_disabled')}
-                    withinPortal
-                >
-                    <ActionIcon
-                        ref={setActivatorNodeRef}
-                        {...attributes}
-                        {...listeners}
-                        variant="subtle"
-                        color="gray"
-                        size="sm"
-                        disabled={!dragEnabled}
-                        aria-label={t('reorder')}
-                        style={{
-                            cursor: isDragging ? 'grabbing' : 'grab',
-                            touchAction: 'none',
-                        }}
+            {draggable ? (
+                <Table.Td style={{ width: 36 }}>
+                    <Tooltip
+                        label={
+                            dragEnabled ? t('reorder') : t('reorder_disabled')
+                        }
+                        withinPortal
                     >
-                        <DotsSixVerticalIcon size={14} />
-                    </ActionIcon>
-                </Tooltip>
-            </Table.Td>
+                        <ActionIcon
+                            ref={setActivatorNodeRef}
+                            {...attributes}
+                            {...listeners}
+                            variant="subtle"
+                            color="gray"
+                            size="sm"
+                            disabled={!dragEnabled}
+                            aria-label={t('reorder')}
+                            style={{
+                                cursor: isDragging ? 'grabbing' : 'grab',
+                                touchAction: 'none',
+                            }}
+                        >
+                            <DotsSixVerticalIcon size={14} />
+                        </ActionIcon>
+                    </Tooltip>
+                </Table.Td>
+            ) : null}
 
             {columns.map((column) => (
                 <TableCell
@@ -80,6 +89,7 @@ export default function TableEntryRow({
                     column={column}
                     value={entryValue(entry, column)}
                     mounted={mounted}
+                    dateFormat={dateFormat}
                 />
             ))}
 

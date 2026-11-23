@@ -55,7 +55,11 @@ export default function NoteEditor({
         <RichTextEditor
             editor={editor}
             variant="subtle"
-            classNames={{ root: classes.editor, content: classes.content }}
+            classNames={{
+                root: classes.editor,
+                toolbar: classes.toolbar,
+                content: classes.content,
+            }}
         >
             <RichTextEditor.Toolbar>
                 <RichTextEditor.ControlsGroup>

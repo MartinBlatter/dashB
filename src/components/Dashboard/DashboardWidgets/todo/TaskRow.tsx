@@ -10,6 +10,7 @@ import {
 } from '@phosphor-icons/react';
 
 import { brandColor } from '#/lib/theme';
+import { useDateFormat } from '#/lib/user-settings';
 
 import { dueLabel, repeatLabel, t } from './tasks';
 
@@ -30,6 +31,7 @@ export default function TaskRow({
     onEdit: () => void;
     onDelete: () => void;
 }) {
+    const dateFormat = useDateFormat();
     const done = task.doneAt !== null;
     const repeat = repeatLabel(task.repeat);
     const canUndo = done || task.timesDone > 0;
@@ -70,7 +72,7 @@ export default function TaskRow({
 
                 <Group gap={6} wrap="wrap" mt={2}>
                     <Text size="xs" c={overdue ? 'red' : 'dimmed'}>
-                        {dueLabel(task)}
+                        {dueLabel(task, dateFormat)}
                     </Text>
 
                     {task.timesRequired > 1 ? (

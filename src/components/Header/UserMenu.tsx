@@ -13,6 +13,7 @@ import {
 } from '@mantine/core';
 import {
     ArrowCounterClockwiseIcon,
+    CalendarBlankIcon,
     CaretDownIcon,
     CheckIcon,
     ImageIcon,
@@ -25,6 +26,7 @@ import { useRouter } from '@tanstack/react-router';
 import { m } from '#/paraglide/messages';
 import { getLocale, locales, setLocale } from '#/paraglide/runtime';
 import { authClient } from '#/lib/auth-client';
+import { dateFormatSample, dateFormats } from '#/lib/date-format';
 import { sessionQueryKey, useSession } from '#/lib/session';
 import {
     clampHue,
@@ -227,6 +229,46 @@ export default function UserMenu() {
                     >
                         {m['header.background_image']()}
                     </Menu.Item>
+
+                    <Menu.Sub>
+                        <Menu.Sub.Target>
+                            <Menu.Sub.Item
+                                leftSection={<CalendarBlankIcon size={16} />}
+                            >
+                                {m['header.date_format']()}
+                            </Menu.Sub.Item>
+                        </Menu.Sub.Target>
+
+                        <Menu.Sub.Dropdown>
+                            {dateFormats.map((format) => {
+                                const active = format === settings.dateFormat;
+                                const sample = dateFormatSample(format);
+
+                                return (
+                                    <Menu.Item
+                                        key={format}
+                                        closeMenuOnClick={false}
+                                        aria-current={active ? true : undefined}
+                                        rightSection={
+                                            active ? (
+                                                <CheckIcon size={14} />
+                                            ) : null
+                                        }
+                                        onClick={() => {
+                                            if (!active)
+                                                void save({
+                                                    dateFormat: format,
+                                                });
+                                        }}
+                                    >
+                                        {format === 'locale'
+                                            ? `${m['header.date_format_auto']()} (${sample})`
+                                            : sample}
+                                    </Menu.Item>
+                                );
+                            })}
+                        </Menu.Sub.Dropdown>
+                    </Menu.Sub>
 
                     <Menu.Label>{m['header.language_label']()}</Menu.Label>
                     {locales.map((locale) => {

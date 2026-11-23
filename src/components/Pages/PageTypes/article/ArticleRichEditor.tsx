@@ -18,10 +18,12 @@ import type { AnyExtension } from '@tiptap/react';
 
 export default function ArticleRichEditor({
     initialContent,
+    editable,
     onChange,
     onBlur,
 }: {
     initialContent: string;
+    editable: boolean;
     onChange: (content: string) => void;
     onBlur: () => void;
 }) {
@@ -29,9 +31,10 @@ export default function ArticleRichEditor({
 
     const editor = useEditor({
         immediatelyRender: false,
+        editable,
         content: initialContent,
         extensions: [
-            StarterKit.configure({ link: { openOnClick: false } }),
+            StarterKit.configure({ link: { openOnClick: !editable } }),
             getUploadImageExtension(TiptapImage, {
                 onImageUpload: async (file: File) => {
                     setImageError(null);
@@ -56,47 +59,54 @@ export default function ArticleRichEditor({
         <RichTextEditor
             editor={editor}
             variant="subtle"
-            classNames={{ root: classes.editor, content: classes.content }}
+            classNames={{
+                root: classes.editor,
+                content: editable
+                    ? classes.content
+                    : `${classes.content} ${classes.reader}`,
+            }}
         >
-            <RichTextEditor.Toolbar
-                sticky
-                stickyOffset="var(--app-shell-header-offset, 60px)"
-                bg={solidBodyColor}
-            >
-                <RichTextEditor.ControlsGroup>
-                    <RichTextEditor.H1 />
-                    <RichTextEditor.H2 />
-                    <RichTextEditor.H3 />
-                    <RichTextEditor.H4 />
-                </RichTextEditor.ControlsGroup>
+            {editable ? (
+                <RichTextEditor.Toolbar
+                    sticky
+                    stickyOffset="var(--app-shell-header-offset, 60px)"
+                    bg={solidBodyColor}
+                >
+                    <RichTextEditor.ControlsGroup>
+                        <RichTextEditor.H1 />
+                        <RichTextEditor.H2 />
+                        <RichTextEditor.H3 />
+                        <RichTextEditor.H4 />
+                    </RichTextEditor.ControlsGroup>
 
-                <RichTextEditor.ControlsGroup>
-                    <RichTextEditor.Bold />
-                    <RichTextEditor.Italic />
-                    <RichTextEditor.Underline />
-                    <RichTextEditor.Strikethrough />
-                    <RichTextEditor.Code />
-                </RichTextEditor.ControlsGroup>
+                    <RichTextEditor.ControlsGroup>
+                        <RichTextEditor.Bold />
+                        <RichTextEditor.Italic />
+                        <RichTextEditor.Underline />
+                        <RichTextEditor.Strikethrough />
+                        <RichTextEditor.Code />
+                    </RichTextEditor.ControlsGroup>
 
-                <RichTextEditor.ControlsGroup>
-                    <RichTextEditor.BulletList />
-                    <RichTextEditor.OrderedList />
-                    <RichTextEditor.Blockquote />
-                    <RichTextEditor.CodeBlock />
-                    <RichTextEditor.Hr />
-                </RichTextEditor.ControlsGroup>
+                    <RichTextEditor.ControlsGroup>
+                        <RichTextEditor.BulletList />
+                        <RichTextEditor.OrderedList />
+                        <RichTextEditor.Blockquote />
+                        <RichTextEditor.CodeBlock />
+                        <RichTextEditor.Hr />
+                    </RichTextEditor.ControlsGroup>
 
-                <RichTextEditor.ControlsGroup>
-                    <RichTextEditor.Link />
-                    <RichTextEditor.Unlink />
-                    <RichTextEditor.ImageUpload />
-                </RichTextEditor.ControlsGroup>
+                    <RichTextEditor.ControlsGroup>
+                        <RichTextEditor.Link />
+                        <RichTextEditor.Unlink />
+                        <RichTextEditor.ImageUpload />
+                    </RichTextEditor.ControlsGroup>
 
-                <RichTextEditor.ControlsGroup>
-                    <RichTextEditor.Undo />
-                    <RichTextEditor.Redo />
-                </RichTextEditor.ControlsGroup>
-            </RichTextEditor.Toolbar>
+                    <RichTextEditor.ControlsGroup>
+                        <RichTextEditor.Undo />
+                        <RichTextEditor.Redo />
+                    </RichTextEditor.ControlsGroup>
+                </RichTextEditor.Toolbar>
+            ) : null}
 
             {imageError ? (
                 <Text size="xs" c="red" px="xs" pt={4}>

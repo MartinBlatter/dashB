@@ -19,18 +19,18 @@ import {
     XIcon,
 } from '@phosphor-icons/react';
 
+import ColumnFormModal from '#/components/Table/ColumnFormModal';
+import ConfirmDeleteModal from '#/components/Table/ConfirmDeleteModal';
+import EntryFormModal from '#/components/Table/EntryFormModal';
+import TableView from '#/components/Table/TableView';
+import { entryMatches } from '#/components/Table/format';
+import { t } from '#/components/Table/i18n';
+import { nextSort, sortEntries } from '#/components/Table/sorting';
 import { useTableColumns, useTableEntries } from '#/lib/page-tables';
-
-import ColumnFormModal from './table/ColumnFormModal';
-import ConfirmDeleteModal from './table/ConfirmDeleteModal';
-import EntryFormModal from './table/EntryFormModal';
-import TableView from './table/TableView';
-import { entryMatches } from './table/format';
-import { t } from './table/i18n';
-import { nextSort, sortEntries } from './table/sorting';
+import { useDateFormat } from '#/lib/user-settings';
 
 import type { PageTypeMeta, PageTypeProps } from './types';
-import type { TableSort } from './table/sorting';
+import type { TableSort } from '#/components/Table/sorting';
 
 export const widgetMeta = {
     type: 'table',
@@ -80,9 +80,12 @@ export default function TablePageType({ pageId }: PageTypeProps) {
             : null;
 
     const searching = query.trim() !== '';
+    const dateFormat = useDateFormat();
 
     const visible = sortEntries(
-        entries.filter((entry) => entryMatches(entry, columns, query)),
+        entries.filter((entry) =>
+            entryMatches(entry, columns, query, dateFormat)
+        ),
         columns,
         sort
     );
@@ -190,6 +193,7 @@ export default function TablePageType({ pageId }: PageTypeProps) {
                     entries={visible}
                     sort={sort}
                     mounted={mounted}
+                    dateFormat={dateFormat}
                     dragEnabled={sort === null && !searching}
                     filtered={searching}
                     onSort={(columnId) =>

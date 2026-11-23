@@ -5,10 +5,13 @@ import { createWidgetMessages } from '#/components/Widgets/i18n';
 import { PICKER_DATE_FORMAT } from '#/components/Widgets/values';
 import { getLocale } from '#/paraglide/runtime';
 
+import { formatDate } from '#/lib/date-format';
+
 import type {
     StoredWidgetValues,
     WidgetField,
 } from '#/components/Widgets/types';
+import type { DateFormat } from '#/lib/date-format';
 import type { WidgetRecord } from '#/lib/widget-records';
 import type { Dayjs } from 'dayjs';
 
@@ -369,21 +372,19 @@ export function undoOnce(task: Task): StoredWidgetValues {
     return encodeTask({ ...task, timesDone: Math.max(0, task.timesDone - 1) });
 }
 
-export function dueLabel(task: Task): string {
-    const locale = getLocale();
+export function dueLabel(task: Task, dateFormat: DateFormat): string {
     const day = dayjs(task.date);
 
     switch (task.scope) {
         case 'day':
-            return day.toDate().toLocaleDateString(locale, {
-                day: '2-digit',
-                month: 'short',
-                year: day.year() === dayjs().year() ? undefined : 'numeric',
+            return formatDate(day.toDate(), dateFormat, {
+                monthName: true,
+                year: day.year() !== dayjs().year(),
             });
         case 'week':
             return `${t('week')} ${day.isoWeek()}`;
         case 'month':
-            return day.toDate().toLocaleDateString(locale, {
+            return day.toDate().toLocaleDateString(getLocale(), {
                 month: 'long',
                 year: 'numeric',
             });

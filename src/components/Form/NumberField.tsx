@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { NumberInput } from '@mantine/core';
 
 import { useBoundField } from './use-bound-field';
@@ -14,15 +15,34 @@ import type { NumberInputProps } from '@mantine/core';
  */
 export function NumberField(props: Omit<NumberInputProps, BoundInputProps>) {
     const { field, value, error } = useBoundField<number | ''>();
+    const [draft, setDraft] = useState<string | null>(null);
+
+    function handleChange(next: number | string) {
+        if (typeof next !== 'string') {
+            setDraft(null);
+            field.handleChange(next);
+
+            return;
+        }
+
+        setDraft(next);
+
+        const parsed = Number(next);
+
+        field.handleChange(
+            next.trim() !== '' && Number.isFinite(parsed) ? parsed : ''
+        );
+    }
 
     return (
         <NumberInput
             {...props}
-            value={value}
-            onChange={(next) =>
-                field.handleChange(typeof next === 'string' ? '' : next)
-            }
-            onBlur={field.handleBlur}
+            value={draft ?? value}
+            onChange={handleChange}
+            onBlur={() => {
+                setDraft(null);
+                field.handleBlur();
+            }}
             error={error}
         />
     );

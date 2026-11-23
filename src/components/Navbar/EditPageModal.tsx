@@ -126,9 +126,10 @@ function EditPageForm({
                 <form.AppField name="slug">
                     {(field) => (
                         <field.TextField
-                            label={m['navbar.page_form.slug']()}
+                            label={m['navbar.page_form.address']()}
+                            description={m['navbar.page_form.address_hint']()}
                             placeholder={m[
-                                'navbar.page_form.slug_placeholder'
+                                'navbar.page_form.address_placeholder'
                             ]()}
                             withAsterisk
                         />
@@ -204,7 +205,7 @@ function errorMessage(error: unknown): string {
     if (!(error instanceof Error)) return m['navbar.page_form.save_failed']();
 
     if (error.message.includes(slugTakenError)) {
-        return m['navbar.page_form.slug_taken']();
+        return m['navbar.page_form.address_taken']();
     }
 
     if (error.message.includes(cycleError)) {

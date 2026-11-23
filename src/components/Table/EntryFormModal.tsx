@@ -7,7 +7,7 @@ import { fieldsFromColumns, sanitizeEntryData } from './columns';
 import { t } from './i18n';
 
 import type { StoredWidgetValues } from '#/components/Widgets/types';
-import type { TableColumn, TableEntry } from '#/lib/page-tables';
+import type { TableColumn, TableEntry } from '#/lib/table-schema';
 
 export default function EntryFormModal({
     opened,

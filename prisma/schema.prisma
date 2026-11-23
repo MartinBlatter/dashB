@@ -93,6 +93,8 @@ model Verification {
 // `backgroundImageId` points at one of the user's own uploaded image files, shown
 // behind those surfaces; the `SetNull` is what clears the preference when that file
 // is deleted on its documents or gallery page, so no dangling id can be served.
+// `dateFormat` is one of the ids in src/lib/date-format.ts and only decides how
+// dates are displayed; stored dates stay ISO either way.
 
 model UserSettings {
   id                String    @id @default(cuid())
@@ -102,6 +104,7 @@ model UserSettings {
   surfaceOpacity    Int?
   backgroundImageId String?
   backgroundImage   Document? @relation(fields: [backgroundImageId], references: [id], onDelete: SetNull)
+  dateFormat        String?
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 

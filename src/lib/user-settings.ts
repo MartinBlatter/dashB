@@ -5,6 +5,11 @@ import { z } from 'zod';
 
 import { prisma } from '#/db';
 import { auth } from '#/lib/auth';
+import {
+    asDateFormat,
+    dateFormats,
+    defaultDateFormat,
+} from '#/lib/date-format';
 import { documentPreviewKind, normalizeMimeType } from '#/lib/page-documents';
 import {
     clampSurfaceOpacity,
@@ -13,16 +18,20 @@ import {
     minSurfaceOpacity,
 } from '#/lib/theme';
 
+import type { DateFormat } from '#/lib/date-format';
+
 export interface UserSettings {
     themeHue: number;
     surfaceOpacity: number;
     backgroundImageId: string | null;
+    dateFormat: DateFormat;
 }
 
 export const defaultUserSettings: UserSettings = {
     themeHue: defaultThemeHue,
     surfaceOpacity: defaultSurfaceOpacity,
     backgroundImageId: null,
+    dateFormat: defaultDateFormat,
 };
 
 const updateUserSettingsInput = z.object({
@@ -34,18 +43,21 @@ const updateUserSettingsInput = z.object({
         .max(defaultSurfaceOpacity)
         .optional(),
     backgroundImageId: z.string().min(1).nullable().optional(),
+    dateFormat: z.enum(dateFormats).optional(),
 });
 
 const settingsSelect = {
     themeHue: true,
     surfaceOpacity: true,
     backgroundImageId: true,
+    dateFormat: true,
 } as const;
 
 type SettingsRow = {
     themeHue: number | null;
     surfaceOpacity: number | null;
     backgroundImageId: string | null;
+    dateFormat: string | null;
 };
 
 function toSettings(row: SettingsRow | null): UserSettings {
@@ -58,6 +70,7 @@ function toSettings(row: SettingsRow | null): UserSettings {
                 ? defaultSurfaceOpacity
                 : clampSurfaceOpacity(row.surfaceOpacity),
         backgroundImageId: row.backgroundImageId,
+        dateFormat: asDateFormat(row.dateFormat),
     };
 }
 
@@ -130,4 +143,8 @@ export function useUserSettings(): UserSettings {
     const { data } = useQuery(userSettingsQueryOptions());
 
     return data ?? defaultUserSettings;
+}
+
+export function useDateFormat(): DateFormat {
+    return useUserSettings().dateFormat;
 }

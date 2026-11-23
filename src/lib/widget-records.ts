@@ -27,6 +27,8 @@ export interface WidgetRecord {
 
 export type WidgetRecordOrder = 'position' | 'sortKey';
 
+export const maxWidgetRecordsPerCollection = 2000;
+
 const listInput = z.object({
     widgetId: z.string().min(1),
     collection: z.string().min(1),
@@ -48,6 +50,12 @@ const updateInput = z.object({
 });
 
 const deleteInput = z.object({ id: z.string().min(1) });
+
+const reorderInput = z.object({
+    widgetId: z.string().min(1),
+    collection: z.string().min(1),
+    ids: z.array(z.string().min(1)).max(maxWidgetRecordsPerCollection),
+});
 
 const recordSelect = {
     id: true,
@@ -194,6 +202,25 @@ export const deleteWidgetRecord = createServerFn({ method: 'POST' })
         await prisma.widgetRecord.delete({ where: { id: data.id } });
     });
 
+export const reorderWidgetRecords = createServerFn({ method: 'POST' })
+    .validator(reorderInput)
+    .handler(async ({ data }): Promise<void> => {
+        await assertOwnedWidget(data.widgetId);
+
+        await prisma.$transaction(
+            data.ids.map((id, index) =>
+                prisma.widgetRecord.updateMany({
+                    where: {
+                        id,
+                        widgetId: data.widgetId,
+                        collection: data.collection,
+                    },
+                    data: { position: index },
+                })
+            )
+        );
+    });
+
 export const widgetRecordsQueryKey = (
     widgetId: string,
     collection: string
@@ -223,6 +250,24 @@ export interface WidgetRecordStore {
         sortKey?: string | null;
     }) => Promise<void>;
     remove: (id: string) => Promise<void>;
+    reorder: (ids: Array<string>) => Promise<void>;
+}
+
+function reorderByIds(
+    current: Array<WidgetRecord> | undefined,
+    ids: Array<string>
+): Array<WidgetRecord> {
+    const byId = new Map((current ?? []).map((record) => [record.id, record]));
+
+    return ids
+        .map((id, index) => {
+            const record = byId.get(id);
+
+            return record === undefined
+                ? undefined
+                : { ...record, position: index };
+        })
+        .filter((record): record is WidgetRecord => record !== undefined);
 }
 
 export function useWidgetRecords(
@@ -285,6 +330,17 @@ export function useWidgetRecords(
         onSettled: invalidate,
     });
 
+    const reorder = useMutation({
+        mutationFn: (ids: Array<string>) =>
+            reorderWidgetRecords({ data: { widgetId, collection, ids } }),
+        onMutate: (ids) => {
+            queryClient.setQueryData<Array<WidgetRecord>>(key, (current) =>
+                reorderByIds(current, ids)
+            );
+        },
+        onSettled: invalidate,
+    });
+
     return {
         records: data ?? [],
         isLoading,
@@ -296,6 +352,9 @@ export function useWidgetRecords(
         },
         remove: async (id) => {
             await remove.mutateAsync(id);
+        },
+        reorder: async (ids) => {
+            await reorder.mutateAsync(ids);
         },
     };
 }

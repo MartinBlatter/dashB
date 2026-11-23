@@ -4,20 +4,25 @@ import { CheckIcon, MinusIcon } from '@phosphor-icons/react';
 import { cellText, isEmptyValue } from './format';
 
 import type { StoredWidgetValue } from '#/components/Widgets/types';
-import type { TableColumn } from '#/lib/page-tables';
+import type { DateFormat } from '#/lib/date-format';
+import type { TableColumn } from '#/lib/table-schema';
 
 export default function TableCell({
     column,
     value,
     mounted,
+    dateFormat,
 }: {
     column: TableColumn;
     value: StoredWidgetValue;
     mounted: boolean;
+    dateFormat: DateFormat;
 }) {
+    const text = cellText(column, value, dateFormat);
+
     if (column.kind === 'switch') {
         return (
-            <Table.Td aria-label={cellText(column, value)}>
+            <Table.Td aria-label={text}>
                 {value === true ? (
                     <CheckIcon size={16} aria-hidden />
                 ) : (
@@ -44,9 +49,7 @@ export default function TableCell({
     if (column.kind === 'datetime') {
         return (
             <Table.Td style={{ whiteSpace: 'nowrap' }}>
-                {mounted ? (
-                    <Text size="sm">{cellText(column, value)}</Text>
-                ) : null}
+                {mounted ? <Text size="sm">{text}</Text> : null}
             </Table.Td>
         );
     }
@@ -55,7 +58,7 @@ export default function TableCell({
         return (
             <Table.Td>
                 <Badge variant="light" size="sm">
-                    {cellText(column, value)}
+                    {text}
                 </Badge>
             </Table.Td>
         );
@@ -64,7 +67,7 @@ export default function TableCell({
     if (column.kind === 'number') {
         return (
             <Table.Td ta="right" style={{ whiteSpace: 'nowrap' }}>
-                <Text size="sm">{cellText(column, value)}</Text>
+                <Text size="sm">{text}</Text>
             </Table.Td>
         );
     }
@@ -77,7 +80,7 @@ export default function TableCell({
                     lineClamp={2}
                     style={{ whiteSpace: 'pre-wrap' }}
                 >
-                    {cellText(column, value)}
+                    {text}
                 </Text>
             </Table.Td>
         );
@@ -86,14 +89,14 @@ export default function TableCell({
     if (column.kind === 'date') {
         return (
             <Table.Td style={{ whiteSpace: 'nowrap' }}>
-                <Text size="sm">{cellText(column, value)}</Text>
+                <Text size="sm">{text}</Text>
             </Table.Td>
         );
     }
 
     return (
         <Table.Td>
-            <Text size="sm">{cellText(column, value)}</Text>
+            <Text size="sm">{text}</Text>
         </Table.Td>
     );
 }

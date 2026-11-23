@@ -42,7 +42,7 @@ import { fieldContext, formContext } from './form-context';
  * Adding an input type means one more file next to this one, registered in
  * `fieldComponents` below.
  */
-export const { useAppForm, withForm } = createFormHook({
+export const { useAppForm, withForm, withFieldGroup } = createFormHook({
     fieldContext,
     formContext,
     fieldComponents: {

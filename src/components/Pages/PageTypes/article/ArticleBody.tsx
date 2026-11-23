@@ -4,6 +4,7 @@ import {
     Paper,
     SegmentedControl,
     Stack,
+    Switch,
     Text,
     Textarea,
 } from '@mantine/core';
@@ -16,7 +17,12 @@ import ArticleOutline from './ArticleOutline';
 import ArticleRichEditor from './ArticleRichEditor';
 import { t } from './i18n';
 import { htmlToMarkdown, markdownToHtml } from './markdown';
-import { articleHeadings, articleWordCount, headingSelector } from './outline';
+import {
+    articleHeadings,
+    articleWordCount,
+    headingSelector,
+    plainText,
+} from './outline';
 import classes from './article.module.css';
 
 import type { Article } from '#/lib/articles';
@@ -43,6 +49,7 @@ export default function ArticleBody({
     const [html, setHtml] = useState(initialContent);
     const [markdown, setMarkdown] = useState('');
     const [markdownMode, setMarkdownMode] = useState(false);
+    const [editing, setEditing] = useState(false);
     const [revision, setRevision] = useState(0);
     const [status, setStatus] = useState<SaveStatus>('idle');
 
@@ -112,6 +119,17 @@ export default function ArticleBody({
         setMarkdownMode(false);
     }
 
+    function handleEditingChange(next: boolean) {
+        if (!next) {
+            syncMarkdown.flush();
+            save.flush();
+            setMarkdownMode(false);
+        }
+
+        setRevision((current) => current + 1);
+        setEditing(next);
+    }
+
     function handleJump(index: number) {
         const heading = bodyRef.current
             ?.querySelectorAll(headingSelector)
@@ -122,6 +140,9 @@ export default function ArticleBody({
 
     const headings = articleHeadings(html);
     const words = articleWordCount(html);
+    const empty =
+        plainText(contentRef.current) === '' &&
+        !contentRef.current.includes('<img');
 
     const statusMessage =
         status === 'saving'
@@ -143,74 +164,104 @@ export default function ArticleBody({
                 }
             >
                 <Stack gap="xs">
-                    <Group justify="space-between" gap="sm" wrap="wrap">
-                        <SegmentedControl
-                            size="xs"
-                            value={markdownMode ? 'markdown' : 'rich'}
-                            onChange={handleModeChange}
-                            aria-label={t('mode')}
-                            data={[
-                                { value: 'rich', label: t('mode_rich') },
-                                {
-                                    value: 'markdown',
-                                    label: t('mode_markdown'),
-                                },
-                            ]}
-                        />
-
-                        <Group gap="md">
+                    <Paper withBorder radius="md" px="sm" py={6}>
+                        <Group justify="space-between" gap="sm" wrap="wrap">
                             <Text size="xs" c="dimmed">
                                 {words} {words === 1 ? t('word') : t('words')}
                             </Text>
 
-                            {statusMessage ? (
-                                <Text
-                                    size="xs"
-                                    c={status === 'failed' ? 'red' : 'dimmed'}
-                                >
-                                    {statusMessage}
-                                </Text>
-                            ) : null}
+                            <Group gap="md">
+                                {editing ? (
+                                    <SegmentedControl
+                                        size="xs"
+                                        value={
+                                            markdownMode ? 'markdown' : 'rich'
+                                        }
+                                        onChange={handleModeChange}
+                                        aria-label={t('mode')}
+                                        data={[
+                                            {
+                                                value: 'rich',
+                                                label: t('mode_rich'),
+                                            },
+                                            {
+                                                value: 'markdown',
+                                                label: t('mode_markdown'),
+                                            },
+                                        ]}
+                                    />
+                                ) : null}
+
+                                {statusMessage ? (
+                                    <Text
+                                        size="xs"
+                                        c={
+                                            status === 'failed'
+                                                ? 'red'
+                                                : 'dimmed'
+                                        }
+                                    >
+                                        {statusMessage}
+                                    </Text>
+                                ) : null}
+
+                                <Switch
+                                    size="sm"
+                                    labelPosition="left"
+                                    label={t('edit_mode')}
+                                    checked={editing}
+                                    onChange={(event) =>
+                                        handleEditingChange(
+                                            event.currentTarget.checked
+                                        )
+                                    }
+                                />
+                            </Group>
                         </Group>
-                    </Group>
+                    </Paper>
 
                     <Paper withBorder radius="md" style={{ overflow: 'clip' }}>
-                        {markdownMode ? (
-                            <Textarea
-                                variant="unstyled"
-                                autosize
-                                minRows={markdownRows}
-                                px="md"
-                                py="sm"
-                                classNames={{ root: classes.markdown }}
-                                aria-label={t('markdown_label')}
-                                placeholder={t('markdown_placeholder')}
-                                value={markdown}
-                                onChange={(event) =>
-                                    handleMarkdownChange(
-                                        event.currentTarget.value
-                                    )
-                                }
-                                onBlur={() => {
-                                    syncMarkdown.flush();
-                                    save.flush();
-                                }}
-                            />
+                        {editing && markdownMode ? (
+                            <>
+                                <Textarea
+                                    variant="unstyled"
+                                    autosize
+                                    minRows={markdownRows}
+                                    px="md"
+                                    py="sm"
+                                    classNames={{ root: classes.markdown }}
+                                    aria-label={t('markdown_label')}
+                                    placeholder={t('markdown_placeholder')}
+                                    value={markdown}
+                                    onChange={(event) =>
+                                        handleMarkdownChange(
+                                            event.currentTarget.value
+                                        )
+                                    }
+                                    onBlur={() => {
+                                        syncMarkdown.flush();
+                                        save.flush();
+                                    }}
+                                />
+
+                                <Text size="xs" c="dimmed" px="md" pb="sm">
+                                    {t('markdown_hint')}
+                                </Text>
+                            </>
+                        ) : !editing && empty ? (
+                            <Text size="sm" c="dimmed" px="lg" py="md">
+                                {t('empty')}
+                            </Text>
                         ) : (
                             <ArticleRichEditor
                                 key={revision}
                                 initialContent={contentRef.current}
+                                editable={editing}
                                 onChange={applyHtml}
                                 onBlur={() => save.flush()}
                             />
                         )}
                     </Paper>
-
-                    {markdownMode ? (
-                        <Text size="xs" c="dimmed">
-                            {t('markdown_hint')}
-                        </Text>
-                    ) : null}
                 </Stack>
             </div>
 

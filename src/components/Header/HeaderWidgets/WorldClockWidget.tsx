@@ -2,6 +2,8 @@ import { Text } from '@mantine/core';
 
 import { createWidgetMessages } from '#/components/Widgets/i18n';
 import { useNow } from '#/components/Widgets/useNow';
+import { formatDate } from '#/lib/date-format';
+import { useDateFormat } from '#/lib/user-settings';
 
 import { commonTimeZones, isSupportedTimeZone, timeZoneLabel } from './zones';
 
@@ -57,6 +59,7 @@ export const widgetMeta = {
 
 export default function WorldClockWidget({ label, config }: HeaderWidgetProps) {
     const now = useNow();
+    const dateFormat = useDateFormat();
 
     const requested = typeof config.zone === 'string' ? config.zone : 'UTC';
     const zone = isSupportedTimeZone(requested) ? requested : 'UTC';
@@ -83,10 +86,10 @@ export default function WorldClockWidget({ label, config }: HeaderWidgetProps) {
                 <Text size="xs" c="dimmed">
                     {now === null
                         ? '—'
-                        : now.toLocaleDateString(undefined, {
+                        : formatDate(now, dateFormat, {
                               timeZone: zone,
-                              day: '2-digit',
-                              month: 'short',
+                              monthName: true,
+                              year: false,
                           })}
                 </Text>
             ) : null}

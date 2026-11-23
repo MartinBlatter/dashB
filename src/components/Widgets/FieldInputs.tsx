@@ -1,16 +1,16 @@
-import { withForm } from '#/components/Form/Form';
+import { withFieldGroup } from '#/components/Form/Form';
 
 import type { WidgetField, WidgetValues } from './types';
 
 const emptyValues: WidgetValues = {};
 
-export const FieldInputs = withForm({
-    defaultValues: { values: emptyValues },
-    props: { fields: [] as ReadonlyArray<WidgetField> },
-    render: ({ form, fields }) => (
+export const FieldInputs = withFieldGroup({
+    defaultValues: emptyValues,
+    props: { widgetFields: [] as ReadonlyArray<WidgetField> },
+    render: ({ group, widgetFields }) => (
         <>
-            {fields.map((field) => (
-                <form.AppField key={field.name} name={`values.${field.name}`}>
+            {widgetFields.map((field) => (
+                <group.AppField key={field.name} name={field.name}>
                     {(bound) => {
                         const label = field.label();
                         const description = field.description?.();
@@ -89,7 +89,7 @@ export const FieldInputs = withForm({
                                 );
                         }
                     }}
-                </form.AppField>
+                </group.AppField>
             ))}
         </>
     ),

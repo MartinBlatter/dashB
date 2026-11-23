@@ -7,7 +7,7 @@ import {
     asColumnKind,
     joinColumnOptions,
     splitColumnOptions,
-} from '#/lib/page-tables';
+} from '#/lib/table-schema';
 
 import { columnFormFields, kindOptions } from './columns';
 import { t } from './i18n';
@@ -17,7 +17,7 @@ import type {
     TableColumn,
     TableColumnDraft,
     TableColumnKind,
-} from '#/lib/page-tables';
+} from '#/lib/table-schema';
 
 function textValue(values: StoredWidgetValues, name: string): string {
     const raw = values[name];

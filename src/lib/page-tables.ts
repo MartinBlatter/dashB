@@ -12,58 +12,26 @@ import { asStoredValues } from '#/components/Widgets/values';
 import { prisma } from '#/db';
 import { auth } from '#/lib/auth';
 import { storedValuesSchema } from '#/lib/dashboard-widgets';
+import {
+    asColumnKind,
+    joinColumnOptions,
+    maxTableColumnLabelLength,
+    maxTableColumnOptionsLength,
+    maxTableColumns,
+    splitColumnOptions,
+    stripColumnValues,
+    tableColumnKinds,
+} from '#/lib/table-schema';
 
 import type { StoredWidgetValues } from '#/components/Widgets/types';
-
-export const tableColumnKinds = [
-    'text',
-    'textarea',
-    'number',
-    'date',
-    'datetime',
-    'select',
-    'switch',
-] as const;
-
-export type TableColumnKind = (typeof tableColumnKinds)[number];
-
-export const maxTableColumnLabelLength = 120;
-export const maxTableColumnOptionsLength = 2000;
-export const maxTableColumns = 30;
-
-export interface TableColumn {
-    id: string;
-    label: string;
-    kind: TableColumnKind;
-    position: number;
-    required: boolean;
-    options: Array<string>;
-}
-
-export interface TableEntry {
-    id: string;
-    position: number;
-    data: StoredWidgetValues;
-}
-
-export function asColumnKind(value: unknown): TableColumnKind {
-    return tableColumnKinds.find((kind) => kind === value) ?? 'text';
-}
-
-export function splitColumnOptions(text: string): Array<string> {
-    return [
-        ...new Set(
-            text
-                .split('\n')
-                .map((line) => line.trim())
-                .filter((line) => line !== '')
-        ),
-    ];
-}
-
-export function joinColumnOptions(options: ReadonlyArray<string>): string {
-    return options.join('\n');
-}
+import type {
+    TableColumn,
+    TableColumnDraft,
+    TableColumnEdit,
+    TableColumnStore,
+    TableEntry,
+    TableEntryStore,
+} from '#/lib/table-schema';
 
 const pageInput = z.object({
     pageId: z.string().min(1),
@@ -292,11 +260,7 @@ export const deleteTableColumn = createServerFn({ method: 'POST' })
             .filter((entry) => column.id in entry.data)
             .map((entry) => ({
                 id: entry.id,
-                data: Object.fromEntries(
-                    Object.entries(entry.data).filter(
-                        ([key]) => key !== column.id
-                    )
-                ),
+                data: stripColumnValues(entry.data, column.id),
             }));
 
         await prisma.$transaction([
@@ -442,33 +406,6 @@ export const tableEntriesQueryOptions = (pageId: string) =>
         queryKey: tableEntriesQueryKey(pageId),
         queryFn: () => fetchTableEntries({ data: { pageId } }),
     });
-
-export interface TableColumnDraft {
-    label: string;
-    kind: TableColumnKind;
-    required: boolean;
-    options: Array<string>;
-}
-
-export type TableColumnEdit = Omit<TableColumnDraft, 'kind'>;
-
-export interface TableColumnStore {
-    columns: Array<TableColumn>;
-    isPending: boolean;
-    create: (draft: TableColumnDraft) => Promise<void>;
-    update: (id: string, edit: TableColumnEdit) => Promise<void>;
-    remove: (id: string) => Promise<void>;
-    reorder: (ids: Array<string>) => Promise<void>;
-}
-
-export interface TableEntryStore {
-    entries: Array<TableEntry>;
-    isPending: boolean;
-    create: (data: StoredWidgetValues) => Promise<void>;
-    update: (id: string, data: StoredWidgetValues) => Promise<void>;
-    remove: (id: string) => Promise<void>;
-    reorder: (ids: Array<string>) => Promise<void>;
-}
 
 function reorderByIds<TItem extends { id: string; position: number }>(
     current: Array<TItem> | undefined,

@@ -2,7 +2,7 @@ import {
     maxTableColumnLabelLength,
     maxTableColumnOptionsLength,
     tableColumnKinds,
-} from '#/lib/page-tables';
+} from '#/lib/table-schema';
 
 import { t } from './i18n';
 
@@ -10,7 +10,7 @@ import type {
     StoredWidgetValues,
     WidgetField,
 } from '#/components/Widgets/types';
-import type { TableColumn, TableColumnKind } from '#/lib/page-tables';
+import type { TableColumn, TableColumnKind } from '#/lib/table-schema';
 
 const kindMessageKeys = {
     text: 'kind_text',

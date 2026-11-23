@@ -60,6 +60,11 @@
     padding: var(--mantine-spacing-md) var(--mantine-spacing-lg);
 }
 
+.reader :global(.ProseMirror) {
+    min-height: 0;
+    cursor: default;
+}
+
 .content :global(.ProseMirror:focus) {
     outline: none;
 }

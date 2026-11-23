@@ -35,6 +35,8 @@ const createPageInput = z.object({
     slug: z.string().min(1),
     position: z.number().int().min(0).optional(),
     parentId: z.string().min(1).nullable(),
+    type: z.string().min(1).nullable().optional(),
+    config: storedValuesSchema.optional(),
 });
 
 const movePageInput = z.object({
@@ -225,6 +227,8 @@ export const createPage = createServerFn({ method: 'POST' })
                     slug: data.slug,
                     position: stagedPosition,
                     parentId: data.parentId,
+                    type: data.type ?? null,
+                    config: data.config ?? {},
                 },
                 select: pageSelect,
             });
