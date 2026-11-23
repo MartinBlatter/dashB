@@ -15,8 +15,18 @@ there is nothing to set up but the installer.
 | Debian, Ubuntu (x64)  | [dashb-x64.deb](https://github.com/MartinBlatter/dashB/releases/latest/download/dashb-x64.deb)             |
 
 Those links always point at the newest [release](https://github.com/MartinBlatter/dashB/releases),
-because the file names carry no version number. The installer is not code-signed
-yet, so Windows SmartScreen warns on first run — _More info_ then _Run anyway_.
+because the file names carry no version number.
+
+**Windows warns on first run.** The installer is deliberately not code-signed, so
+SmartScreen shows _"Windows protected your PC"_ and names an unknown publisher.
+Click _More info_, then _Run anyway_. The same goes for the _Publisher: Unknown_
+line in the elevation prompt — signing is what fills that in, and this project
+does not pay for a certificate. To confirm you downloaded the real file, compare
+its hash against the `sha512` in `latest.yml` on the release page:
+
+```powershell
+[Convert]::ToBase64String([Security.Cryptography.SHA512]::Create().ComputeHash([IO.File]::ReadAllBytes((Resolve-Path .\DashB-Setup-x64.exe))))
+```
 
 New to the app? The [user guide](docs/UserGuide.md) is also in the app itself,
 behind the help link in the footer.
@@ -424,10 +434,60 @@ would take precedence over the SVG.
 In `pnpm desktop:dev` the window still shows the stock Electron icon, because the
 packaged app gets its icon from the executable rather than from `BrowserWindow`.
 
+### Code signing
+
+The installers are unsigned, by choice. The options were weighed and rejected:
+Azure Trusted Signing is the cheap one at $9.99/month, but individual developers
+are limited to the USA and Canada, and a CA certificate costs a few hundred a
+year and — since the CA/Browser Forum's 2023 rules — has to live on a hardware
+token, which does not suit unattended CI builds. For a personal app with a small
+install base, the _More info → Run anyway_ click is the better trade.
+
+What that costs: SmartScreen warns on first run, the elevation prompt reads
+_Publisher: Unknown_, and some browsers flag the download. `description` and
+`author` in [electron/package.json](electron/package.json) at least populate the
+installer's Properties → Details (`description` becomes its FileDescription,
+`author` the CompanyName on both binaries), so the downloaded file is not
+completely anonymous. The app executable keeps `productName` as its
+FileDescription.
+
+If this ever changes, electron-builder 26 wires it up through
+`win.azureSignOptions` (`publisherName`, `endpoint`, `codeSigningAccountName`,
+`certificateProfileName`), with Entra credentials supplied as environment
+variables.
+
 ### Not done yet
 
-- The installer is unsigned, so Windows SmartScreen warns on first run.
 - No auto-update.
+
+## AI disclosure
+
+Much of this project — application code, the guides in [docs/](docs/) and this
+README — was written with [Claude Code](https://claude.com/claude-code). There is
+no automated test suite, so nothing here is verified beyond manual use and
+review.
+
+Treat it accordingly: it is a personal project, and the [licence](#licence)
+disclaims all warranty. If you plan to run it on data you care about, read the
+code first — particularly the sign-in and database paths.
+
+## Licence
+
+[PolyForm Noncommercial 1.0.0](LICENSE). Use it, change it and pass it on freely
+for any noncommercial purpose — hobby and personal use, study, research, and use
+by charities, schools, public research bodies and government institutions are all
+covered explicitly. Running it as part of a business, or any other use for
+commercial advantage, needs separate permission from the licensor.
+
+Attribution travels with it. The licence's _Notices_ section obliges anyone who
+passes on any part of the software to include both the licence (or its URL) and
+the `Required Notice:` line at the top of [LICENSE](LICENSE), which carries the
+copyright and this repository's URL. The footer link in the app points at the
+same place. Breaching a term gives you 32 days from written notice to come into
+compliance before the licences end.
+
+Because it restricts commercial use, this is a source-available licence rather
+than an open-source one in the OSI sense. None of the above is legal advice.
 
 ## Reference
 

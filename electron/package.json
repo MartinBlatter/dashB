@@ -2,6 +2,8 @@
     "name": "dashb",
     "productName": "DashB",
     "version": "0.1.0",
+    "description": "Personal dashboard — server, database and UI, all local",
+    "author": "Martin Blatter",
     "private": true,
     "type": "module",
     "main": "main.mjs"

@@ -1,4 +1,4 @@
-import { Box, Group, Text } from '@mantine/core';
+import { Anchor, Box, Group, Text } from '@mantine/core';
 import { QuestionIcon } from '@phosphor-icons/react';
 
 import { AnchorLink } from '#/components/AnchorLink/AnchorLink';
@@ -29,7 +29,16 @@ export default function Footer() {
 
             <Group gap="xs" wrap="nowrap" justify="flex-end">
                 <Text size="sm" c="dimmed">
-                    © {year} DashB
+                    © {year}{' '}
+                    <Anchor
+                        href="https://github.com/MartinBlatter/dashB"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        inherit
+                        underline="hover"
+                    >
+                        DashB
+                    </Anchor>
                 </Text>
             </Group>
         </Box>
