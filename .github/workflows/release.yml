@@ -71,6 +71,8 @@ jobs:
 
             - name: Generate the Prisma client
               run: pnpm exec prisma generate
+              env:
+                  DATABASE_URL: file:./unused.db
 
             - name: Build the server
               run: pnpm build
