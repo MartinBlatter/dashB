@@ -8,11 +8,11 @@ for storage and Better Auth for sign-in.
 The desktop app runs the whole thing locally — server, database and all — so
 there is nothing to set up but the installer.
 
-| Platform              | Download                                                                                                   |
-| --------------------- | ---------------------------------------------------------------------------------------------------------- |
-| Windows (x64)         | [DashB-Setup-x64.exe](https://github.com/MartinBlatter/dashB/releases/latest/download/DashB-Setup-x64.exe) |
-| Linux (x64, AppImage) | [dashb-x64.AppImage](https://github.com/MartinBlatter/dashB/releases/latest/download/dashb-x64.AppImage)   |
-| Debian, Ubuntu (x64)  | [dashb-x64.deb](https://github.com/MartinBlatter/dashB/releases/latest/download/dashb-x64.deb)             |
+| Platform              | Download                                                                                                       |
+| --------------------- | -------------------------------------------------------------------------------------------------------------- |
+| Windows (x64)         | [DashB-Setup-x64.exe](https://github.com/MartinBlatter/dashB/releases/latest/download/DashB-Setup-x64.exe)     |
+| Linux (x64, AppImage) | [dashb-x86_64.AppImage](https://github.com/MartinBlatter/dashB/releases/latest/download/dashb-x86_64.AppImage) |
+| Debian, Ubuntu (x64)  | [dashb-amd64.deb](https://github.com/MartinBlatter/dashB/releases/latest/download/dashb-amd64.deb)             |
 
 Those links always point at the newest [release](https://github.com/MartinBlatter/dashB/releases),
 because the file names carry no version number.
