@@ -33,6 +33,7 @@ nsis:
     createStartMenuShortcut: true
     differentialPackage: false
 linux:
+    maintainer: 'Martin Blatter <MartinBlatter@users.noreply.github.com>'
     artifactName: dashb-${arch}.${ext}
     target:
         - AppImage
