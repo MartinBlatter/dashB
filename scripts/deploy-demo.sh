@@ -128,6 +128,18 @@ if [ "$APPLY" -eq 0 ]; then
     log "Dry run - nothing will be changed. Re-run with --apply to proceed."
 fi
 
+if docker inspect "$CONTAINER" > /dev/null 2>&1; then
+    owner="$(docker inspect "$CONTAINER" \
+        --format '{{index .Config.Labels "com.docker.compose.project.working_dir"}}' \
+        2> /dev/null || true)"
+
+    if [ "$owner" != "$ROOT" ]; then
+        die "a container named $CONTAINER already exists, created from '${owner:-outside compose}'.
+  Compose cannot adopt it, so starting would fail on the name.
+  Remove it first:  docker rm -f $CONTAINER"
+    fi
+fi
+
 log "Checking DNS for $DOMAIN"
 
 resolved="$(getent hosts "$DOMAIN" 2> /dev/null | awk '{print $1}' | head -1 || true)"
@@ -256,7 +268,19 @@ if [ -n "$PROXY_STACK" ]; then
 
     [ -f "$CADDYFILE" ] || die "no Caddyfile in $PROXY_STACK"
 
-    log "Proxy stack: $PROXY_STACK"
+    stack_compose=""
+
+    for candidate in docker-compose.yml docker-compose.yaml compose.yml compose.yaml; do
+        if [ -f "$PROXY_STACK/$candidate" ]; then
+            stack_compose="$candidate"
+            break
+        fi
+    done
+
+    [ -n "$stack_compose" ] ||
+        die "no compose file in $PROXY_STACK - it has a Caddyfile but nothing to run, so this is not the stack directory"
+
+    log "Proxy stack: $PROXY_STACK ($stack_compose)"
 
     if [ -f "$OVERRIDE" ]; then
         if grep -q "$NETWORK" "$OVERRIDE"; then
