@@ -15,8 +15,38 @@ docker-entrypoint.sh    migrate, then exec the server
 .dockerignore           keeps the build context small
 scripts/
   apply-migrations.mjs  the container's migration step
+  deploy-demo.sh        does everything below, for a demo behind an existing Caddy
 .env.example            template for .env
 ```
+
+## The short way
+
+[scripts/deploy-demo.sh](../scripts/deploy-demo.sh) performs every step in
+_First-time setup_ and _Sharing a server_ in one go: it creates the shared
+network, fills in `.env`, wires an existing Caddy stack up to the demo, builds,
+starts, and then checks that the site answers over HTTPS.
+
+```bash
+bash scripts/deploy-demo.sh --domain demo.example.com \
+    --proxy-stack ../dashB_private --tz Europe/Zurich --reset-at 03:00
+```
+
+That prints what it _would_ do and changes nothing. Add `--apply` to go ahead.
+`--help` lists the rest; drop `--proxy-stack` to configure only the demo and
+wire up the proxy yourself.
+
+It is written to be re-run — that is the update path too. It never replaces an
+existing `BETTER_AUTH_SECRET`, since doing so would sign everybody out. It never
+rewrites the proxy stack's `docker-compose.yml`; it writes a
+`docker-compose.override.yml`, which Compose merges automatically and you can
+remove by deleting the one file. The Caddy site block it appends sits between
+`# >>> dashb-demo` markers and is replaced, not duplicated, on later runs. And
+before reloading anything it backs the `Caddyfile` up, validates the result in a
+throwaway Caddy container, and restores the backup if validation fails — so a
+bad run leaves the stack exactly as it was.
+
+The rest of this document is what the script does, and what to do when a step
+needs doing by hand.
 
 ## What actually has to run
 
