@@ -1,12 +1,60 @@
 # DashB
 
-A dashboard app built on TanStack Start, with Mantine for UI, Prisma + SQLite
-for storage and Better Auth for sign-in.
+A personal dashboard you run yourself. The things you check every day go on a
+widget grid — tasks, shopping, habits, spending, the weather — and everything
+else lives on pages you create: notes, articles, tables, boards, galleries,
+files. It all stays in one database file on your own machine.
+
+There is no account to sign up for, no cloud and no sync. DashB ships as a
+desktop app for Windows and Linux that carries its own server and database, so
+installing it is the whole setup. It also runs as an ordinary web app if you
+would rather host it.
+
+## What you get
+
+**A dashboard of widgets.** Drag them around the grid, resize them from the
+corner, and the layout saves itself.
+
+| Widget        | What it shows                                                |
+| ------------- | ------------------------------------------------------------ |
+| To-do list    | Tasks with deadlines, grouped by when they are due           |
+| Shopping list | Things to buy, grouped by aisle                              |
+| Habits        | A daily check-off with streaks                               |
+| Expenses      | What you spent, this month against the ones before           |
+| Schedule      | A month calendar, including calendar feeds you subscribe to  |
+| Weather       | Current conditions and a short forecast for a place you name |
+| Bookmarks     | Quick links to the places you keep going back to             |
+| Table         | A small table of your own columns, one row per entry         |
+
+Smaller one-line readouts — date and time, a world clock, the temperature, your
+next event, a countdown or countup — sit in the header and stay visible
+wherever you are.
+
+**Pages for everything else.** Each page has a type that decides what it does,
+and pages nest as deeply as you like.
+
+| Page type | What it is for                                                  |
+| --------- | --------------------------------------------------------------- |
+| Dashboard | A second widget grid, separate from the main one                |
+| Notes     | A board of notes you drag, resize and write in                  |
+| Article   | One long document with headings, rich text and images           |
+| Table     | A table whose columns you define yourself                       |
+| Board     | Lanes of cards you drag along as work moves through stages      |
+| Gallery   | Pictures as thumbnails, with albums and a large view            |
+| Documents | Folders and uploaded files in a tree, with preview and download |
+| Embed     | Another site or tool shown inside the page                      |
+| Section   | An index of the pages below this one, as cards                  |
+
+**Made to look the way you want.** Pick a hue and the entire app recolors live;
+there is a dark mode, a surface-opacity slider that turns the panels to glass,
+and any picture you have uploaded can become the background behind them. Dates
+follow a format you choose, and the interface is available in English and
+German.
+
+**Your data is yours.** Everything, uploads included, lives in a single SQLite
+file. Backing up the app is copying that one file.
 
 ## Download
-
-The desktop app runs the whole thing locally — server, database and all — so
-there is nothing to set up but the installer.
 
 | Platform              | Download                                                                                                       |
 | --------------------- | -------------------------------------------------------------------------------------------------------------- |
@@ -14,24 +62,27 @@ there is nothing to set up but the installer.
 | Linux (x64, AppImage) | [dashb-x86_64.AppImage](https://github.com/MartinBlatter/dashB/releases/latest/download/dashb-x86_64.AppImage) |
 | Debian, Ubuntu (x64)  | [dashb-amd64.deb](https://github.com/MartinBlatter/dashB/releases/latest/download/dashb-amd64.deb)             |
 
-Those links always point at the newest [release](https://github.com/MartinBlatter/dashB/releases),
-because the file names carry no version number.
+Those links always point at the newest
+[release](https://github.com/MartinBlatter/dashB/releases). The app signs you in
+on first launch and opens straight on the dashboard — there is nothing to
+configure.
 
-**Windows warns on first run.** The installer is deliberately not code-signed, so
-SmartScreen shows _"Windows protected your PC"_ and names an unknown publisher.
-Click _More info_, then _Run anyway_. The same goes for the _Publisher: Unknown_
-line in the elevation prompt — signing is what fills that in, and this project
-does not pay for a certificate. To confirm you downloaded the real file, compare
-its hash against the `sha512` in `latest.yml` on the release page:
+**Windows warns on first run.** The installer is not code-signed, so SmartScreen
+shows _"Windows protected your PC"_ and the elevation prompt reads _Publisher:
+Unknown_. Click _More info_, then _Run anyway_. To check you downloaded the real
+file, compare its hash with the `sha512` in `latest.yml` on the release page:
 
 ```powershell
 [Convert]::ToBase64String([Security.Cryptography.SHA512]::Create().ComputeHash([IO.File]::ReadAllBytes((Resolve-Path .\DashB-Setup-x64.exe))))
 ```
 
-New to the app? The [user guide](docs/UserGuide.md) is also in the app itself,
-behind the help link in the footer.
+New to the app? The [user guide](docs/UserGuide.md) walks through all of it, and
+it is in the app itself behind the help link in the footer.
 
-## Getting started
+## Running it yourself
+
+DashB is a TanStack Start app with a Nitro server, Mantine for the interface,
+Prisma on SQLite for storage and Better Auth for sign-in.
 
 ```bash
 pnpm install
@@ -39,7 +90,7 @@ pnpm db:push        # create dev.db from prisma/schema.prisma
 pnpm dev            # http://localhost:3000
 ```
 
-`.env.local` holds the local configuration:
+`.env.local` holds the configuration:
 
 | Variable             | Purpose                                             |
 | -------------------- | --------------------------------------------------- |
@@ -47,418 +98,23 @@ pnpm dev            # http://localhost:3000
 | `BETTER_AUTH_URL`    | Base URL of the app, e.g. `http://localhost:3000`   |
 | `BETTER_AUTH_SECRET` | Signing secret — `pnpm dlx @better-auth/cli secret` |
 
-Typed, validated access to environment variables lives in [src/env.ts](src/env.ts)
-(`@t3-oss/env-core`): server variables under `server`, client variables under
-`client` with a `VITE_` prefix.
-
-## Scripts
-
-```bash
-pnpm dev          # dev server on port 3000
-pnpm build        # production build (Nitro server output)
-pnpm preview      # serve the build locally
-pnpm lint         # eslint
-pnpm format       # prettier --write + eslint --fix
-pnpm check        # prettier --check
-pnpm db:generate  # regenerate the Prisma client into src/generated/prisma
-pnpm db:push      # push the schema to the dev database
-pnpm db:migrate   # create and apply a migration
-pnpm db:studio    # Prisma Studio
-```
-
-The `db:*` scripts load `.env.local` through `dotenv-cli`.
-
-## Stack
-
-- **TanStack Start** on Vite 8, with Nitro as the server adapter.
-- **React 19** with the React Compiler enabled (`babel-plugin-react-compiler`
-  in [vite.config.ts](vite.config.ts)) — do not add manual `useMemo`/
-  `useCallback` for render-cost reasons.
-- **TanStack Router** with file-based routes, **TanStack Query** (SSR-integrated
-  via `setupRouterSsrQueryIntegration` in [src/router.tsx](src/router.tsx)),
-  **TanStack Form**, plus **TanStack Table** and **TanStack Store** available
-  for widgets.
-- **Mantine 9** for components and theming, `postcss-preset-mantine` for the
-  mixins and breakpoints, **Phosphor** for icons. There is no global
-  stylesheet: styling goes through Mantine props, its theme, and CSS modules
-  next to a component when needed. The primary color is per-user, see
-  [Theming](#theming).
-- **Prisma 7** with the `better-sqlite3` driver adapter. The client is
-  generated into `src/generated/prisma` (gitignored), so run `pnpm db:generate`
-  after pulling a schema change.
-- **Better Auth** for email/password sessions.
-- **Paraglide JS** for i18n.
-- **ESLint** (`@tanstack/eslint-config`) and **Prettier**.
-
-## Layout
-
-```
-src/
-  routes/            file-based routes (__root.tsx holds the app shell)
-    api/auth/$.ts    Better Auth request handler
-    api/documents/   upload and download of a documents page's files
-  components/        one folder per component
-    Form/            Mantine inputs bound to TanStack Form
-  lib/               auth, session and shared helpers
-  integrations/      TanStack Query client + devtools wiring
-  db.ts              Prisma client singleton
-  env.ts             validated environment variables
-  generated/         generated Prisma client (gitignored)
-  paraglide/         generated i18n runtime (regenerated on dev/build)
-messages/            translation sources: en.json, de.json
-prisma/schema.prisma database schema
-docs/                the user guide and how to extend the app
-```
-
-### Widgets
-
-Both widget systems are extended by **adding one file** — the registry globs it
-at build time, and the picker, the settings form, validation and storage all
-follow from what the file declares:
-
-- [docs/DashboardWidgets.md](docs/DashboardWidgets.md) — cards on the dashboard
-  grid. These may store rows of their own data, which all widgets share through
-  the generic `widget_record` table, so a new widget type never needs a schema
-  change.
-- [docs/HeaderWidgets.md](docs/HeaderWidgets.md) — the small readouts in the
-  header.
-
-The field declarations, generated form, validation and i18n helper they share
-live in [src/components/Widgets/](src/components/Widgets/).
-
-### Pages
-
-Every page except the dashboard renders through one template, and what it shows
-is decided by the page's **type**. Page types are added the same way as widgets
-— one file, globbed at build time, reusing the same field declarations:
-
-- [docs/PageTypes.md](docs/PageTypes.md) — the page template, the type registry
-  and how to write a type.
-
-A page type that needs rows of its own uses the generic `page_record` table
-through `usePageRecords` in [src/lib/page-records.ts](src/lib/page-records.ts),
-the per-page counterpart of `widget_record`, so it needs no schema change
-either.
-
-### Routes
-
-Adding a file under [src/routes/](src/routes/) adds a route;
-[src/routeTree.gen.ts](src/routeTree.gen.ts) is regenerated by the dev server
-and the build. Navigate with `Link` from `@tanstack/react-router`, or with
-[AnchorLink](src/components/AnchorLink/AnchorLink.tsx) for a Mantine `Anchor`
-that keeps the router's type-checked `to`/`search` props.
-
-### Help
-
-The footer links to `/help`, which renders the user guide in
-[docs/UserGuide.md](docs/UserGuide.md), this README and the contributor guides
-in [docs/](docs/) as HTML inside the app. The registry of rendered documents is
-[src/lib/help-docs.ts](src/lib/help-docs.ts) — add a file there to add a help
-page. The Markdown is inlined at build time through `import.meta.glob` with
-`?raw`, because the packaged desktop app ships no `docs/` folder on disk.
-
-[src/lib/help-markdown.ts](src/lib/help-markdown.ts) converts it with `marked`:
-it gives headings ids for the table of contents, turns links between documents
-into `/help/...` routes and rewrites links to source files into GitHub links.
-Raw HTML in the Markdown is dropped, so the only thing
-[HelpBody](src/components/Help/HelpBody.tsx) injects with
-`dangerouslySetInnerHTML` is markup `marked` generated from repository files.
-This is the one place in the app that injects HTML; keep it that way, and add a
-sanitizer before pointing `renderHelpDoc` at anything a user can write.
-
-### Auth
-
-Routes are **private by default**: the `beforeLoad` in
-[src/routes/\_\_root.tsx](src/routes/__root.tsx) resolves the session and
-redirects to `/login` unless the path is listed in `publicPaths` in
-[src/lib/auth-routes.ts](src/lib/auth-routes.ts). The session itself is read
-once per request on the server and shared with the client through the query
-cache — read it in components with `useSession()` from
-[src/lib/session.ts](src/lib/session.ts).
-
-Signed-in routes render inside the Mantine `AppShell` (header, navbar, footer);
-`/login` and `/register` render standalone inside
-[AuthCard](src/components/AuthCard/AuthCard.tsx).
-
-### Theming
-
-The Mantine primary color is generated from a single hue the user picks with the
-`HueSlider` in [UserMenu](src/components/Header/UserMenu.tsx).
-[src/lib/theme.ts](src/lib/theme.ts) turns that hue into the ten-shade tuple
-Mantine needs (`themeForHue`), always under the color name `brand`, so
-components keep using `color="brand"` or the default primary color and nothing
-references a fixed hue.
-
-All three appearance settings live per user on `user_settings` — `themeHue`,
-`surfaceOpacity` and `backgroundImageId` — read and written by the two server
-functions in [src/lib/user-settings.ts](src/lib/user-settings.ts):
-`fetchUserSettings` and `updateUserSettings`, which takes a partial patch so one
-control never overwrites another's value. The root route resolves them in
-`beforeLoad`, so the server already renders the right CSS variables and nothing
-flashes on load. Dragging a slider writes the previewed value straight into the
-query cache — the whole app re-themes live — and releasing it persists.
-
-#### Semi-transparent surfaces
-
-`surfaceOpacity` is a percentage, and anything under 100 is the glass mode;
-`surfaceVariables(opacity)` returns the `cssVariablesResolver` that
-`MantineProvider` is given. It overrides exactly one Mantine variable,
-`--mantine-color-body`, with an `rgba()` value — which is all it takes, because
-that one variable is what `body`, the `AppShell` header, navbar and footer, and
-every `Paper` and `Card` paint themselves with. Dropdowns, popovers, tooltips
-and inputs read `--mantine-color-white` / `--mantine-color-dark-6` instead, so
-they stay opaque for free.
-
-The resolver also always publishes `--dashb-body-solid`, the opaque body color
-for the current scheme. That is what the surfaces which must **not** go
-see-through are pinned to: `Modal` and `Drawer` content (via `theme.components`
-in `themeForHue`), a sticky `Table` header and the article editor's sticky
-toolbar — a translucent sticky element lets the content scroll visibly through
-it. Reach for `solidBodyColor` whenever you add another sticky or overlapping
-surface.
-
-At 100% none of this is emitted, no inline style is set and the rendered output
-is what it was before the feature existed.
-
-#### The background image
-
-`backgroundImageId` points at one of the user's own uploaded image files — the
-`document` rows that documents and gallery pages share — picked in
-[BackgroundImageModal](src/components/Header/BackgroundImageModal.tsx), which
-lists them grouped by page and loads each thumbnail only once it scrolls into
-view. The column is a real foreign key with `onDelete: SetNull`, so deleting the
-picture on its own page clears the preference instead of leaving a dangling id.
-
-[AppBackground](src/components/AppBackground/AppBackground.tsx) paints it: a
-`position: fixed` layer at `z-index: -1`, which is why `body` is set to
-`transparent` in glass mode — body's own background would otherwise paint over
-it. The image cannot be a plain CSS `url()` pointing at the file route, for the
-`Sec-Fetch-Dest` reason in [docs/PageTypes.md](docs/PageTypes.md); it goes
-through `useDocumentFile`, the same `fetch`-to-object-URL hook the gallery uses.
-Picking an image while the slider still sits at 100% also nudges the opacity
-down, so the choice is visible straight away.
-
-### Forms
-
-[src/components/Form/Form.ts](src/components/Form/Form.ts) exports `useAppForm`,
-a TanStack Form hook pre-bound to Mantine inputs:
-
-```tsx
-const form = useAppForm({
-    defaultValues: { email: '' },
-    validators: { onSubmit: schema },
-    onSubmit: async ({ value }) => { ... },
-});
-
-<form.AppForm>
-    <form.FormRoot>
-        <form.AppField name="email">
-            {(field) => <field.TextField label="Email" type="email" />}
-        </form.AppField>
-        <form.SubmitButton fullWidth>Sign in</form.SubmitButton>
-    </form.FormRoot>
-</form.AppForm>;
-```
-
-A new input type is a new file in that folder, registered in `fieldComponents`.
-
-### i18n
-
-Messages live in [messages/](messages/) as `{locale}.json`, configured by
-[project.inlang/settings.json](project.inlang/settings.json) (`en` base, `de`
-secondary). The Paraglide Vite plugin regenerates `src/paraglide` on dev and
-build. Use them through the message object:
-
-```tsx
-import { m } from '#/paraglide/messages';
-
-<Button>{m['header.add_widget']()}</Button>;
-```
-
-Locale lives in the URL (`/de/...`), switched from
-[UserMenu](src/components/Header/UserMenu.tsx) alongside the color scheme and
-the theme color.
-
-## Deployment
-
-`pnpm build` produces a self-contained Node server via Nitro. Deploy the build
-output and start it with `node dist/server/index.mjs`. For host-specific
-presets (Vercel, Netlify, Cloudflare, AWS Lambda) see
-<https://v3.nitro.build/deploy>.
-
-## Desktop app
-
-DashB also packages as a standalone Windows/Linux desktop app. The app is not
-rewritten as a client-side SPA — Electron starts the **existing Nitro build** on
-`127.0.0.1` and shows it in a window, so every server function, Prisma query and
-Better Auth session keeps working unchanged. Nothing under [src/](src/) is
-desktop-specific.
-
-```bash
-pnpm desktop:dev          # run the shell against the built server
-pnpm desktop:pack         # Windows installer -> release/
-pnpm desktop:pack:linux   # AppImage + deb (must run on Linux, see below)
-```
-
-`pnpm desktop:dev` uses the last `pnpm build` output. Set `DASHB_DEV_URL=http://localhost:3000`
-to point the window at the Vite dev server instead, which is handy for UI work
-but writes a local user into whichever database that server is using.
-
-### Layout
-
-```
-electron/            the desktop shell: plain Node ESM, no npm dependencies
-  main.mjs           lifecycle, window, server supervision
-  server.mjs         port choice, utilityProcess fork, readiness probe
-  session.mjs        auto sign-in + cookie transplant
-  database.mjs       migration runner
-  secrets.mjs        per-install secret, derived local password
-  paths.mjs          userData and resource paths
-migrations/          schema history shipped with the app (see below)
-scripts/
-  emit-migration.mjs  generates migrations/ from schema.prisma
-  native-electron.mjs swaps better-sqlite3 to Electron's ABI
-electron-builder.yml  packaging config
-```
-
-### How a launch works
-
-1. Read-or-create `<userData>/secret`; the local user's password is derived from
-   it with HKDF, so no password is ever stored.
-2. Apply any unapplied migration from `migrations/` to `<userData>/dashb.db`.
-   This happens in the main process, **before** the server starts, because
-   [src/db.ts](src/db.ts) builds its adapter at import time and the root route
-   queries immediately.
-3. Fork the Nitro server as a `utilityProcess` on port 37591, with
-   `HOST=127.0.0.1` so it never binds the LAN, and `DATABASE_URL`,
-   `BETTER_AUTH_SECRET` and `BETTER_AUTH_URL` in its environment.
-4. Poll `GET /api/auth/ok`, then sign the local user in over the app's own HTTP
-   API — signing them up on first run — and copy the returned session cookie
-   into Electron's cookie jar.
-5. Open the window. The root route's `beforeLoad` already sees a session, so the
-   dashboard renders with no login screen and no redirect.
-
-All user state lives in `<userData>/dashb.db` (`%APPDATA%/DashB` on Windows) —
-uploads included, since documents are BLOBs and note images are inline data
-URLs. Backing up the app is copying that one file. `server.log` and, if startup
-ever fails, `startup-error.log` land next to it.
-
-### Why Electron 42 is pinned
-
-`better-sqlite3` is a raw V8 addon, so it is locked to an exact
-`NODE_MODULE_VERSION` and must be rebuilt for Electron's ABI — this is true in a
-`utilityProcess`, under `ELECTRON_RUN_AS_NODE`, and in the main process alike.
-better-sqlite3 12.x publishes ready-made Electron binaries only up to **ABI 146,
-which is Electron 42**, so `desktop:native` can simply download one and no C++
-toolchain is needed. Moving to a newer Electron means either building from
-source (Visual Studio Build Tools + Python) or waiting for better-sqlite3 13.x,
-which is N-API based and would retire this constraint — but it is a direct
-dependency of `@prisma/adapter-better-sqlite3`, so it needs an override.
-
-`desktop:native` copies better-sqlite3 out of the pnpm store before downloading,
-so the plain-Node binary that `pnpm dev` relies on is never overwritten.
-
-### Schema changes
-
-The desktop app ships `migrations/` and applies pending ones at startup; a
-`db:push`-only workflow would leave every installed copy stale after a schema
-change. It deliberately lives outside `prisma/migrations/` so that Prisma's own
-tooling does not treat the `db:push`-created [dev.db](dev.db) as drifted and
-offer to reset it.
-
-After changing [prisma/schema.prisma](prisma/schema.prisma), add a migration:
-
-```bash
-pnpm prisma migrate diff --from-migrations migrations     --to-schema prisma/schema.prisma --script     --shadow-database-url "file:./shadow.db"     -o migrations/1_<name>/migration.sql
-```
-
-### Linux builds
-
-AppImage and deb cannot be cross-built from Windows — the packaging tools need a
-Linux host. Run `pnpm desktop:pack:linux` from WSL2 or the
-`electronuserland/builder` image, using a separate checkout so the Linux
-Electron binary does not clash with the Windows one. The native module itself is
-not the blocker: `desktop:native --platform=linux` downloads a Linux binary fine
-from anywhere.
-
-### Releases
-
-[.github/workflows/release.yml](.github/workflows/release.yml) builds both
-platforms on GitHub's runners and attaches the results to a release:
-
-```bash
-# bump the version in electron/package.json first, then
-git tag v0.2.0
-git push --tags
-```
-
-The tag must match that `version` — the workflow checks it and stops early if it
-does not, because electron-builder names the release after the app version and
-not after the tag. A bare `0.2.0` works as well as `v0.2.0`. Each platform job repeats what a local pack does
-(`prisma generate`, `pnpm build`, `pnpm desktop:native`, electron-builder) and
-publishes into a **draft** release, so the notes can be written before anything
-is visible. The two jobs run one after the other because they write to the same
-release.
-
-Starting the workflow by hand from the Actions tab skips publishing and uploads
-the installers as build artifacts instead — that is how to get a build without
-cutting a release.
-
-The `publish:` block in [electron-builder.yml](electron-builder.yml) names the
-repository and makes electron-builder emit the `latest.yml` manifests an
-auto-updater would read. Release assets inherit the repository's visibility, so
-while the repo is private every download needs a token.
-
-`artifactName` keeps the version out of the file names — `DashB-Setup-x64.exe`,
-not `DashB Setup 0.1.0.exe` — which is what lets the
-`releases/latest/download/<file>` links in [Download](#download) keep working
-across releases. Two consequences: the links 404 until the draft release is
-actually published, and a downloaded file no longer says which version it is
-(the app does, and `latest.yml` records it).
-
-### The app icon
-
-The icon is one hand-authored file, [build/resources/icon.svg](build/resources/icon.svg):
-the Phosphor `SquaresFour` glyph on a rounded square, using the brand blue the
-default theme hue (208) generates. electron-builder rasterizes it at 1024px and
-emits a 7-size `.ico` (16 through 256) for Windows plus the Linux icon set, so
-there is no binary artwork in the repo and no conversion step to run.
-
-To change it, edit that one file — swap the `d` attribute for another Phosphor
-path, or the gradient stops for a different hue — then rebuild. The same file is
-copied to [public/icon.svg](public/icon.svg) and linked as the favicon from
-[src/routes/\_\_root.tsx](src/routes/__root.tsx), so keep the two in sync if you
-edit it. A `.png` (256px minimum) or `.ico` dropped in as `build/resources/icon.png`
-would take precedence over the SVG.
-
-In `pnpm desktop:dev` the window still shows the stock Electron icon, because the
-packaged app gets its icon from the executable rather than from `BrowserWindow`.
-
-### Code signing
-
-The installers are unsigned, by choice. The options were weighed and rejected:
-Azure Trusted Signing is the cheap one at $9.99/month, but individual developers
-are limited to the USA and Canada, and a CA certificate costs a few hundred a
-year and — since the CA/Browser Forum's 2023 rules — has to live on a hardware
-token, which does not suit unattended CI builds. For a personal app with a small
-install base, the _More info → Run anyway_ click is the better trade.
-
-What that costs: SmartScreen warns on first run, the elevation prompt reads
-_Publisher: Unknown_, and some browsers flag the download. `description` and
-`author` in [electron/package.json](electron/package.json) at least populate the
-installer's Properties → Details (`description` becomes its FileDescription,
-`author` the CompanyName on both binaries), so the downloaded file is not
-completely anonymous. The app executable keeps `productName` as its
-FileDescription.
-
-If this ever changes, electron-builder 26 wires it up through
-`win.azureSignOptions` (`publisherName`, `endpoint`, `codeSigningAccountName`,
-`certificateProfileName`), with Entra credentials supplied as environment
-variables.
-
-### Not done yet
-
-- No auto-update.
+`pnpm build` produces a self-contained Node server; start it with
+`node dist/server/index.mjs`. The desktop app runs that same build behind an
+Electron window, so nothing in the application code is desktop-specific.
+
+## Making it your own
+
+Both widget systems and the page types are extended by **adding one file**. A
+registry picks it up at build time, and the picker, the settings form, its
+validation and its storage all follow from what that file declares — a new
+widget or page type never needs a database change.
+
+- [Creating a dashboard widget](docs/DashboardWidgets.md)
+- [Creating a header widget](docs/HeaderWidgets.md)
+- [Creating a page type](docs/PageTypes.md)
+- [How the project is built](docs/Architecture.md) — layout, scripts, theming,
+  auth, forms and i18n
+- [The desktop app](docs/Desktop.md) — how a launch works, packaging and releases
 
 ## AI disclosure
 
@@ -479,20 +135,11 @@ by charities, schools, public research bodies and government institutions are al
 covered explicitly. Running it as part of a business, or any other use for
 commercial advantage, needs separate permission from the licensor.
 
-Attribution travels with it. The licence's _Notices_ section obliges anyone who
-passes on any part of the software to include both the licence (or its URL) and
-the `Required Notice:` line at the top of [LICENSE](LICENSE), which carries the
-copyright and this repository's URL. The footer link in the app points at the
-same place. Breaching a term gives you 32 days from written notice to come into
-compliance before the licences end.
+Attribution travels with it: anyone passing on part of the software has to
+include the licence (or its URL) and the `Required Notice:` line at the top of
+[LICENSE](LICENSE), which carries the copyright and this repository's URL.
+Breaching a term gives you 32 days from written notice to come into compliance
+before the licences end.
 
 Because it restricts commercial use, this is a source-available licence rather
 than an open-source one in the OSI sense. None of the above is legal advice.
-
-## Reference
-
-- TanStack Start — <https://tanstack.com/start>
-- Mantine — <https://mantine.dev>
-- Prisma — <https://www.prisma.io/docs>
-- Better Auth — <https://www.better-auth.com>
-- Paraglide JS — <https://inlang.com/m/gerre34r/library-inlang-paraglideJs>

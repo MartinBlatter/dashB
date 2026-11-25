@@ -16,9 +16,16 @@ export const helpDocs: Array<HelpDoc> = [
     {
         slug: 'overview',
         file: 'README.md',
-        title: 'Overview',
+        title: 'About DashB',
         description:
-            'The stack, the scripts, how the app is laid out, theming and deployment.',
+            'What the app is, where to get it, and how to run it yourself.',
+    },
+    {
+        slug: 'architecture',
+        file: 'docs/Architecture.md',
+        title: 'How the project is built',
+        description:
+            'The stack, the scripts, how the app is laid out, theming, auth, forms and i18n.',
     },
     {
         slug: 'page-types',
@@ -40,6 +47,13 @@ export const helpDocs: Array<HelpDoc> = [
         title: 'Creating a header widget',
         description:
             'The small readouts in the header, and the space they have to work with.',
+    },
+    {
+        slug: 'desktop',
+        file: 'docs/Desktop.md',
+        title: 'The desktop app',
+        description:
+            'How a launch works, where your data lives, packaging and releases.',
     },
 ];
 

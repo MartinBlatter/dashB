@@ -139,7 +139,9 @@ recycle bin, so make a copy of the database if you want a way back.
 DashB is meant to be extended with widgets and page types of your own. The
 other guides in this help are written for that:
 
-- [Overview](../README.md) — how the project is put together.
+- [About DashB](../README.md) — what it is and how to run it yourself.
+- [How the project is built](Architecture.md) — the stack, the layout, theming.
 - [Creating a dashboard widget](DashboardWidgets.md)
 - [Creating a header widget](HeaderWidgets.md)
 - [Creating a page type](PageTypes.md)
+- [The desktop app](Desktop.md) — how a launch works, packaging and releases.
