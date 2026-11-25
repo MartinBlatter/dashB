@@ -10,6 +10,8 @@ desktop app for Windows and Linux that carries its own server and database, so
 installing it is the whole setup. It also runs as an ordinary web app if you
 would rather host it.
 
+![The DashB dashboard with bookmarks, to-do list and expenses widgets](docs/screenshot.png)
+
 ## What you get
 
 **A dashboard of widgets.** Drag them around the grid, resize them from the
