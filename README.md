@@ -99,8 +99,11 @@ pnpm dev            # http://localhost:3000
 | `BETTER_AUTH_SECRET` | Signing secret — `pnpm dlx @better-auth/cli secret` |
 
 `pnpm build` produces a self-contained Node server; start it with
-`node dist/server/index.mjs`. The desktop app runs that same build behind an
+`node .output/server/index.mjs`. The desktop app runs that same build behind an
 Electron window, so nothing in the application code is desktop-specific.
+
+To put it on a server, there is a `Dockerfile` and a `docker-compose.yml` that
+run that build behind Caddy — see [hosting it on a server](docs/Deployment.md).
 
 ## Making it your own
 
@@ -115,6 +118,8 @@ widget or page type never needs a database change.
 - [How the project is built](docs/Architecture.md) — layout, scripts, theming,
   auth, forms and i18n
 - [The desktop app](docs/Desktop.md) — how a launch works, packaging and releases
+- [Hosting it on a server](docs/Deployment.md) — Docker, migrations, TLS and
+  running it as a public demo
 
 ## AI disclosure
 

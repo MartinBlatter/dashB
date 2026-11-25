@@ -1,0 +1,18 @@
+services:
+    app:
+        build: .
+        container_name: dashb-demo
+        env_file: .env
+        volumes:
+            - sqlite-data:/app/data
+        networks:
+            - proxy
+        restart: unless-stopped
+
+networks:
+    proxy:
+        name: dashb-proxy
+        external: true
+
+volumes:
+    sqlite-data:
