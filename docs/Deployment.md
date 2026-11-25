@@ -4,9 +4,42 @@ DashB runs as an ordinary web app: the same Nitro build the desktop app wraps,
 started directly, behind a reverse proxy that terminates TLS. This is how the
 public demo site is deployed.
 
+The public demo runs at `https://demo.mblatter.de`, next to the private
+dashboard on the same VPS. That stack's Caddy owns `:80`/`:443` and already has
+the site block and network for the demo committed, so this repo only has to
+start one container.
+
+## Deploying the demo
+
+First time, on the VPS:
+
 ```bash
-docker compose up -d --build   # on the server, next to a filled-in .env
+docker network create dashb-proxy          # skip if it already exists
+git clone <this repo> ~/dashb && cd ~/dashb
+cp .env.example .env                       # then edit it, see below
+docker compose up -d --build
 ```
+
+`.env` for the demo:
+
+```
+DATABASE_URL="file:/app/data/dashb.db"
+BETTER_AUTH_SECRET="<openssl rand -base64 32>"
+BETTER_AUTH_URL="https://demo.mblatter.de"
+BETTER_AUTH_TRUSTED_ORIGINS="https://demo.mblatter.de"
+PORT=3000
+DEMO_RESET_AT="03:00"
+TZ="Europe/Zurich"
+```
+
+Every update after that:
+
+```bash
+cd ~/dashb && git pull && docker compose up -d --build
+```
+
+Check it: `docker compose logs -f app` shows the migration line, then open
+`https://demo.mblatter.de`.
 
 ```
 Dockerfile              two-stage build: pnpm build, then a runtime image
@@ -15,38 +48,8 @@ docker-entrypoint.sh    migrate, then exec the server
 .dockerignore           keeps the build context small
 scripts/
   apply-migrations.mjs  the container's migration step
-  deploy-demo.sh        does everything below, for a demo behind an existing Caddy
 .env.example            template for .env
 ```
-
-## The short way
-
-[scripts/deploy-demo.sh](../scripts/deploy-demo.sh) performs every step in
-_First-time setup_ and _Sharing a server_ in one go: it creates the shared
-network, fills in `.env`, wires an existing Caddy stack up to the demo, builds,
-starts, and then checks that the site answers over HTTPS.
-
-```bash
-bash scripts/deploy-demo.sh --domain demo.example.com \
-    --proxy-stack ../dashB_private --tz Europe/Zurich --reset-at 03:00
-```
-
-That prints what it _would_ do and changes nothing. Add `--apply` to go ahead.
-`--help` lists the rest; drop `--proxy-stack` to configure only the demo and
-wire up the proxy yourself.
-
-It is written to be re-run — that is the update path too. It never replaces an
-existing `BETTER_AUTH_SECRET`, since doing so would sign everybody out. It never
-rewrites the proxy stack's `docker-compose.yml`; it writes a
-`docker-compose.override.yml`, which Compose merges automatically and you can
-remove by deleting the one file. The Caddy site block it appends sits between
-`# >>> dashb-demo` markers and is replaced, not duplicated, on later runs. And
-before reloading anything it backs the `Caddyfile` up, validates the result in a
-throwaway Caddy container, and restores the backup if validation fails — so a
-bad run leaves the stack exactly as it was.
-
-The rest of this document is what the script does, and what to do when a step
-needs doing by hand.
 
 ## What actually has to run
 
@@ -176,19 +179,21 @@ tenth migration named `10_…` would sort before `2_…`.
 
 Only one process can hold `:80`/`:443`. If another stack on the same machine
 already runs Caddy, do not start a second one — let the existing Caddy proxy to
-this app over the shared network.
+this app over the shared network. For `demo.mblatter.de` this is already done
+in the `dashB_private` repo; for another host, make the same two changes in
+whichever stack owns the Caddy.
 
-In the other stack's `docker-compose.yml`, put its Caddy on both networks:
+Put its Caddy on both networks:
 
 ```yaml
 services:
     caddy:
         networks:
             - default
-            - proxy
+            - dashb-proxy
 
 networks:
-    proxy:
+    dashb-proxy:
         name: dashb-proxy
         external: true
 ```
@@ -196,16 +201,16 @@ networks:
 Naming any network on a service drops the implicit default, so `default` has to
 be listed explicitly or that Caddy stops reaching its own app.
 
-Then add a site block to that stack's `Caddyfile`:
+Then add a site block to its `Caddyfile` and run `docker compose up -d` there:
 
 ```
 demo.example.com {
+	request_body {
+		max_size 10MB
+	}
 	reverse_proxy dashb-demo:3000
 }
 ```
-
-A bare domain name is all Caddy needs to provision and renew a Let's Encrypt
-certificate. Reload with `docker compose up -d` in that stack.
 
 ## Running it as a public demo
 
