@@ -15,7 +15,7 @@ First time, on the VPS:
 
 ```bash
 docker network create dashb-proxy          # skip if it already exists
-git clone <this repo> ~/dashb && cd ~/dashb
+git clone <this repo> ~/dashb-demo && cd ~/dashb-demo
 cp .env.example .env                       # then edit it, see below
 docker compose up -d --build
 ```
@@ -35,7 +35,7 @@ TZ="Europe/Zurich"
 Every update after that:
 
 ```bash
-cd ~/dashb && git pull && docker compose up -d --build
+cd ~/dashb-demo && git pull && docker compose up -d --build
 ```
 
 Check it: `docker compose logs -f app` shows the migration line, then open
